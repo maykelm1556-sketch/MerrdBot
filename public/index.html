@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MerrdBot</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="banner-streamer">
+
+        <img src="foto-streamer.png.png" alt="Foto del streamer" class="banner-foto">
+
+        <div class="banner-info">
+            <div class="banner-estado">
+                <span class="punto-en-vivo"></span> EN VIVO
+            </div>
+            <h1 class="banner-nombre">MerrdBot</h1>
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="tabs">
+
+            <button class="tab active" data-tab="economia">
+                💰 Economía
+            </button>
+
+            <button class="tab" data-tab="comunidad">
+                👥 Comunidad
+            </button>
+
+            <button class="tab" data-tab="admin">
+                ⚙️ Admin
+            </button>
+
+        </div>
+
+        <div id="tab-content">
+
+            <!-- ECONOMÍA -->
+
+            <div class="tab-panel active" id="economia">
+
+                <h2>Economía</h2>
+
+                <button id="btnNuevoUsuario">
+                    + Agregar usuario a Economía
+                </button>
+
+                <div id="formNuevoUsuario" style="display:none; margin-top:15px;">
+
+                    <input
+                        type="text"
+                        id="nombreUsuario"
+                        placeholder="Nombre del usuario">
+
+                    <button id="guardarUsuario">
+                        Guardar
+                    </button>
+
+                </div>
+
+                <div id="economiaLista">
+    <!-- Los usuarios de Economía aparecerán aquí -->
+</div>
+
+            </div>
+
+            <!-- COMUNIDAD -->
+
+            <div class="tab-panel" id="comunidad">
+
+                <h2>Comunidad</h2>
+
+                <div class="comunidad-lista">
+
+                    <div class="usuario-item">
+                        <span>Maykel</span>
+                        <span>Nivel 1</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- ADMIN -->
+
+            <div class="tab-panel" id="admin">
+
+                <h2>Panel Admin</h2>
+
+                <div id="adminLogin">
+
+                    <input type="text" id="adminUsuario" placeholder="Usuario">
+                    <input type="password" id="adminPassword" placeholder="Contraseña">
+                    <button id="btnAdminLogin">Ingresar</button>
+
+                    <p id="adminError" style="display:none;">Usuario o contraseña incorrectos.</p>
+
+                </div>
+
+                <div id="adminPanel" style="display:none;">
+
+                    <button id="btn-agregar-usuario">
+                        Agregar usuario de prueba
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
