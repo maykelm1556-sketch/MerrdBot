@@ -177,6 +177,8 @@ app.get("/auth/kick/callback", async (req, res) => {
 
         const datos = JSON.parse(textoCrudo);
 
+        console.log("Datos completos recibidos de Kick al autorizar:", datos);
+
         await KickAuth.deleteMany({});
 
         const nuevoAuth = new KickAuth({
@@ -190,6 +192,7 @@ app.get("/auth/kick/callback", async (req, res) => {
         await nuevoAuth.save();
 
         console.log("Token de Kick guardado en la base de datos ✅");
+        console.log("Scope que se guardó realmente:", nuevoAuth.scope);
 
         res.send("Autorización completada y guardada. Ya puedes cerrar esta pestaña.");
 
