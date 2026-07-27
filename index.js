@@ -160,19 +160,22 @@ app.get("/auth/kick/callback", async (req, res) => {
 
     try {
 
+      console.log("Longitud de KICK_CLIENT_ID:", process.env.KICK_CLIENT_ID.length);
+        console.log("Longitud de KICK_CLIENT_SECRET:", process.env.KICK_CLIENT_SECRET.length);
+        console.log("KICK_REDIRECT_URI usado:", JSON.stringify(process.env.KICK_REDIRECT_URI));
+
         const respuesta = await fetch("https://id.kick.com/oauth/token", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({
                 grant_type: "authorization_code",
-                client_id: process.env.KICK_CLIENT_ID,
-                client_secret: process.env.KICK_CLIENT_SECRET,
-                redirect_uri: process.env.KICK_REDIRECT_URI,
+                client_id: process.env.KICK_CLIENT_ID.trim(),
+                client_secret: process.env.KICK_CLIENT_SECRET.trim(),
+                redirect_uri: process.env.KICK_REDIRECT_URI.trim(),
                 code_verifier: codeVerifierGuardado,
                 code: code
             })
         });
-
         const textoCrudo = await respuesta.text();
 
         const datos = JSON.parse(textoCrudo);
