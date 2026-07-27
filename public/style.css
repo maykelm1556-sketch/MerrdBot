@@ -329,3 +329,270 @@ header h2 {
 #btn-agregar-usuario:hover {
     background-color: #2ecc10;
 }
+#nombreSorteo {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: #ffffff;
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+#nombreSorteo:focus {
+    outline: none;
+    border-color: #39ff14;
+}
+
+#agregarParticipante,
+#girarRuleta,
+#importarEconomia {
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+#agregarParticipante:hover,
+#girarRuleta:hover,
+#importarEconomia:hover {
+    background-color: #2ecc10;
+}
+
+#listaParticipantes {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0;
+}
+
+#listaParticipantes li {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    color: #ffffff;
+}
+
+#resultadoSorteo {
+    color: #39ff14;
+    margin-top: 15px;
+}
+#eliminarGanador {
+    background-color: #ff3b3b;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: opacity 0.2s ease;
+}
+
+#eliminarGanador:hover {
+    opacity: 0.8;
+}
+.comunidad-lista{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.usuario-card{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 15px 20px;
+
+    border-radius: 12px;
+    background: #1e1e1e;
+    border: 1px solid #333;
+}
+
+.usuario-header{
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.usuario-header h3{
+    margin: 0;
+    width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.usuario-header .nivel {
+    width: 70px;
+    flex-shrink: 0;
+}
+
+.usuario-header .xp-bar {
+    flex-shrink: 0;
+}
+
+.usuario-info{
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.usuario-info p{
+    margin: 0;
+}
+.xp-bar{
+    width:180px;
+    height:8px;
+    background:#333;
+    border-radius:20px;
+    overflow:hidden;
+    margin-top:6px;
+}
+
+.xp-fill{
+    height:100%;
+    background:#8b5cf6;
+    transition:width .3s;
+}
+.admin-only{
+    display: none;
+}
+.admin-only {
+    display: none;
+}
+#modalEditar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+#modalEditarContenido {
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    padding: 25px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#modalEditarContenido h3 {
+    color: #ffffff;
+    margin: 0 0 5px 0;
+}
+
+#editarNombreInput,
+#editarPuntosInput {
+    background-color: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+#editarNombreInput:focus,
+#editarPuntosInput:focus {
+    outline: none;
+    border-color: #39ff14;
+}
+
+#guardarEdicion {
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#cancelarEdicion {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 8px;
+}
+label[for="duracionGiro"] {
+    color: #ffffff;
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+#duracionGiro {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: #ffffff;
+    font-size: 14px;
+    width: 100px;
+    margin-bottom: 10px;
+}
+
+#duracionGiro:focus {
+    outline: none;
+    border-color: #39ff14;
+}
+.eliminarParticipante {
+    background-color: #ff3b3b;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.eliminarParticipante:hover {
+    opacity: 0.8;
+}
+
+#listaParticipantes li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+#btnConectarKick {
+    display: inline-block;
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+    margin-left: 8px;
+    transition: background-color 0.2s ease;
+}
+
+#btnConectarKick:hover {
+    background-color: #2ecc10;
+}
