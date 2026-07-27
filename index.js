@@ -212,6 +212,9 @@ async function enviarMensajeChat(texto) {
         return;
     }
 
+    console.log("Scope del token guardado:", auth.scope);
+    console.log("Fecha en que se creó el token:", auth.creado_en);
+
     const respuesta = await fetch("https://api.kick.com/public/v1/chat", {
         method: "POST",
         headers: {
