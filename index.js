@@ -243,26 +243,35 @@ app.get("/auth/kick/callback", async (req, res) => {
 });
 
 const KICK_SLUG = "eloviedo";
-app.get("/api/estado-vivo", async (req, res) => {
+
+let canalEnVivo = false;
+
+async function verificarEnVivo() {
 
     try {
 
-      const respuesta = await fetch(`https://kick.com/api/v2/channels/${KICK_SLUG}`, {
-    headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
-});
-        const datos = await respuesta.json();
-console.log("Livestream recibido:", datos.livestream);
-        const enVivo = datos && datos.livestream !== null && datos.livestream !== undefined;
+        const respuesta = await fetch(`https://kick.com/api/v2/channels/${KICK_SLUG}`, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+        });
 
-        res.json({ enVivo: enVivo });
+        const datos = await respuesta.json();
+
+        canalEnVivo = datos && datos.livestream !== null && datos.livestream !== undefined;
 
     } catch (error) {
         console.error("Error consultando estado de Kick:", error.message);
-        res.json({ enVivo: false });
+        canalEnVivo = false;
     }
 
+}
+
+verificarEnVivo();
+setInterval(verificarEnVivo, 60000);
+
+app.get("/api/estado-vivo", (req, res) => {
+    res.json({ enVivo: canalEnVivo });
 });
 const PUSHER_WS_URL = "wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0-rc2&flash=false";
 
@@ -386,7 +395,9 @@ async function conectarChatKick() {
 
             console.log(`${usuario}: ${texto}`);
 
-            await registrarActividad(usuario);
+            if (canalEnVivo) {
+                await registrarActividad(usuario);
+            }
 
         const comando = texto.trim().toLowerCase();
 
