@@ -47,12 +47,14 @@ function renderEconomia() {
 
     economiaLista.innerHTML = "";
 
-    economia.forEach((usuario, index) => {
+    const economiaOrdenada = [...economia].sort((a, b) => b.puntos - a.puntos);
+
+    economiaOrdenada.forEach((usuario, index) => {
         economiaLista.innerHTML += `
         <div class="usuario-item">
             <span class="usuario-numero">#${index + 1}</span>
             <span class="usuario-nombre">${usuario.usuario}</span>
-            <span class="usuario-puntos">${usuario.puntos} pts</span>
+        <span class="usuario-puntos">${usuario.puntos.toLocaleString("es-ES")} pts</span>
         ${adminAutenticado ? `
     <button class="editarUsuario" data-id="${usuario._id}">
     Editar

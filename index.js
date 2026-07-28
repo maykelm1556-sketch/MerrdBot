@@ -266,13 +266,63 @@ console.log("Livestream recibido:", datos.livestream);
 });
 const PUSHER_WS_URL = "wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0-rc2&flash=false";
 
+async function renovarTokenKick(auth) {
+
+    const respuesta = await fetch("https://id.kick.com/oauth/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+            grant_type: "refresh_token",
+            client_id: process.env.KICK_CLIENT_ID,
+            client_secret: process.env.KICK_CLIENT_SECRET,
+            refresh_token: auth.refresh_token
+        })
+    });
+
+    const textoCrudo = await respuesta.text();
+    const datos = JSON.parse(textoCrudo);
+
+    if (!datos.access_token) {
+        console.log("No se pudo renovar el token de Kick:", textoCrudo);
+        return null;
+    }
+
+    auth.access_token = datos.access_token;
+    auth.refresh_token = datos.refresh_token;
+    auth.expires_in = datos.expires_in;
+    auth.creado_en = new Date();
+
+    await auth.save();
+
+    console.log("Token de Kick renovado automáticamente ✅");
+
+    return auth;
+
+}
+
 async function enviarMensajeChat(texto) {
 
-    const auth = await KickAuth.findOne();
+    let auth = await KickAuth.findOne();
 
     if (!auth) {
         console.log("No hay token de Kick guardado. No se pudo enviar el mensaje.");
         return;
+    }
+
+    const minutosDesdeCreacion = (Date.now() - new Date(auth.creado_en).getTime()) / 60000;
+    const minutosDeVida = auth.expires_in / 60;
+
+    if (minutosDesdeCreacion >= minutosDeVida - 10) {
+
+        console.log("Token de Kick por vencer, renovando...");
+        const authRenovado = await renovarTokenKick(auth);
+
+        if (!authRenovado) {
+            console.log("No se pudo renovar el token, se cancela el envío del mensaje.");
+            return;
+        }
+
+        auth = authRenovado;
     }
 
     console.log("Scope del token guardado:", auth.scope);
@@ -338,8 +388,36 @@ async function conectarChatKick() {
 
             await registrarActividad(usuario);
 
-            if (texto.trim().toLowerCase() === "!puntos") {
-                await enviarMensajeChat(`@${usuario} Mira tus puntos y el ranking aquí: https://merrdbot.onrender.com`);
+        const comando = texto.trim().toLowerCase();
+
+            if (comando === "!link") {
+                await enviarMensajeChat(`@${usuario} Mira el panel completo aquí: https://merrdbot.onrender.com`);
+            }
+
+            if (comando === "!puntos" || comando === "!nivel" || comando === "!watchtime") {
+
+                const datosUsuario = await Comunidad.findOne({ usuario: usuario });
+
+                if (!datosUsuario) {
+                    await enviarMensajeChat(`@${usuario} Todavía no tengo datos tuyos, ¡sigue participando en el chat!`);
+                } else {
+
+                    if (comando === "!puntos") {
+                        await enviarMensajeChat(`@${usuario} tienes ${datosUsuario.puntos} pts`);
+                    }
+
+                    if (comando === "!nivel") {
+                        await enviarMensajeChat(`@${usuario} estás en el nivel ${datosUsuario.nivel}`);
+                    }
+
+                    if (comando === "!watchtime") {
+                        const dias = Math.floor(datosUsuario.watchtime / 1440);
+                        const horas = Math.floor((datosUsuario.watchtime % 1440) / 60);
+                        const minutos = datosUsuario.watchtime % 60;
+                        await enviarMensajeChat(`@${usuario} has visto este canal durante ${dias} días ${horas} horas ${minutos} minutos`);
+                    }
+
+                }
             }
         }
     });
