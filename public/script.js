@@ -1,3 +1,9 @@
+function escaparHtml(texto) {
+    const div = document.createElement("div");
+    div.textContent = texto;
+    return div.innerHTML;
+}
+
 const tabs = document.querySelectorAll(".tab");
 const panels = document.querySelectorAll(".tab-panel");
 
@@ -118,7 +124,8 @@ function activarModoAdmin(usuario) {
     adminLogin.style.display = "none";
     adminPanel.style.display = "block";
     adminError.style.display = "none";
-
+cargarSugerencias();
+    cargarAdmins();
     document.querySelectorAll(".admin-only").forEach(el => {
         el.style.display = "inline-block";
     });
@@ -143,9 +150,10 @@ btnAdminLogin.addEventListener("click", () => {
             }
             return response.json();
         })
-        .then(data => {
+      .then(data => {
             localStorage.setItem("merrdbot_admin_usuario", usuario);
             localStorage.setItem("merrdbot_admin_password", password);
+            localStorage.setItem("merrdbot_admin_esDefault", data.esDefault ? "true" : "false");
             activarModoAdmin(usuario);
             alert("Bienvenido, " + usuario + ". Acceso de administrador concedido.");
         })
@@ -165,8 +173,10 @@ if (usuarioGuardado && passwordGuardado) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ usuario: usuarioGuardado, password: passwordGuardado })
     })
-        .then(response => {
-            if (response.ok) {
+        .then(response => response.json().then(data => ({ status: response.status, data })))
+        .then(({ status, data }) => {
+            if (status === 200) {
+                localStorage.setItem("merrdbot_admin_esDefault", data.esDefault ? "true" : "false");
                 activarModoAdmin(usuarioGuardado);
             }
         });
@@ -297,6 +307,11 @@ function renderParticipantes() {
 
 const importarEconomia = document.getElementById("importarEconomia");
 
+const modalPuntosMinimos = document.getElementById("modalPuntosMinimos");
+const puntosMinimosInput = document.getElementById("puntosMinimosInput");
+const confirmarPuntosMinimos = document.getElementById("confirmarPuntosMinimos");
+const cancelarPuntosMinimos = document.getElementById("cancelarPuntosMinimos");
+
 importarEconomia.addEventListener("click", () => {
 
     if (economia.length === 0) {
@@ -304,13 +319,106 @@ importarEconomia.addEventListener("click", () => {
         return;
     }
 
-    economia.forEach((usuario) => {
-        if (!participantes.includes(usuario.usuario)) {
-            participantes.push(usuario.usuario);
-        }
-    });
+    origenImportacion = "economia";
+    puntosMinimosInput.value = "";
+    modalPuntosMinimos.style.display = "flex";
 
-    renderParticipantes();
+});
+
+cancelarPuntosMinimos.addEventListener("click", () => {
+    modalPuntosMinimos.style.display = "none";
+});
+
+let origenImportacion = "economia";
+let destinoImportacion = "sorteos";
+
+const importarComunidad = document.getElementById("importarComunidad");
+
+importarComunidad.addEventListener("click", () => {
+
+    if (comunidadDatos.length === 0) {
+        alert("No hay usuarios en Comunidad todavía.");
+        return;
+    }
+
+    origenImportacion = "comunidad";
+    destinoImportacion = "sorteos";
+    puntosMinimosInput.value = "";
+    modalPuntosMinimos.style.display = "flex";
+
+});
+
+const importarEconomiaRuleta = document.getElementById("importarEconomiaRuleta");
+const importarComunidadRuleta = document.getElementById("importarComunidadRuleta");
+
+importarEconomiaRuleta.addEventListener("click", () => {
+
+    if (economia.length === 0) {
+        alert("No hay usuarios en Economía todavía.");
+        return;
+    }
+
+    origenImportacion = "economia";
+    destinoImportacion = "ruleta";
+    puntosMinimosInput.value = "";
+    modalPuntosMinimos.style.display = "flex";
+
+});
+
+importarComunidadRuleta.addEventListener("click", () => {
+
+    if (comunidadDatos.length === 0) {
+        alert("No hay usuarios en Comunidad todavía.");
+        return;
+    }
+
+    origenImportacion = "comunidad";
+    destinoImportacion = "ruleta";
+    puntosMinimosInput.value = "";
+    modalPuntosMinimos.style.display = "flex";
+
+});
+
+confirmarPuntosMinimos.addEventListener("click", () => {
+
+    const minimo = parseInt(puntosMinimosInput.value);
+
+    if (isNaN(minimo)) {
+        alert("Escribe un número válido.");
+        return;
+    }
+
+    const listaOrigen = origenImportacion === "comunidad" ? comunidadDatos : economia;
+
+    const usuariosFiltrados = listaOrigen.filter(usuario => usuario.puntos >= minimo);
+
+    if (usuariosFiltrados.length === 0) {
+        alert("Ningún usuario tiene esa cantidad de puntos.");
+        return;
+    }
+
+    if (destinoImportacion === "ruleta") {
+
+        usuariosFiltrados.forEach((usuario) => {
+            if (!participantesRuletaVisual.includes(usuario.usuario)) {
+                participantesRuletaVisual.push(usuario.usuario);
+            }
+        });
+
+        renderListaRuletaVisual();
+
+    } else {
+
+        usuariosFiltrados.forEach((usuario) => {
+            if (!participantes.includes(usuario.usuario)) {
+                participantes.push(usuario.usuario);
+            }
+        });
+
+        renderParticipantes();
+    }
+
+    modalPuntosMinimos.style.display = "none";
 
 });
 
@@ -344,9 +452,40 @@ girarRuleta.addEventListener("click", () => {
     const segundos = parseFloat(duracionGiro.value) || 1.5;
     const totalVueltas = Math.round((segundos * 1000) / 100);
 
+    const audioCtxSorteo = new (window.AudioContext || window.webkitAudioContext)();
+
+    function reproducirTickSorteo() {
+        const osc = audioCtxSorteo.createOscillator();
+        const gain = audioCtxSorteo.createGain();
+        osc.frequency.value = 700;
+        gain.gain.setValueAtTime(0.15, audioCtxSorteo.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtxSorteo.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtxSorteo.destination);
+        osc.start();
+        osc.stop(audioCtxSorteo.currentTime + 0.05);
+    }
+
+    function reproducirFanfarriaSorteo() {
+        const notas = [523, 659, 784, 1047];
+        notas.forEach((freq, i) => {
+            const osc = audioCtxSorteo.createOscillator();
+            const gain = audioCtxSorteo.createGain();
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, audioCtxSorteo.currentTime + i * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtxSorteo.currentTime + i * 0.12 + 0.3);
+            osc.connect(gain);
+            gain.connect(audioCtxSorteo.destination);
+            osc.start(audioCtxSorteo.currentTime + i * 0.12);
+            osc.stop(audioCtxSorteo.currentTime + i * 0.12 + 0.3);
+        });
+    }
+
     let vueltas = 0;
 
     const intervalo = setInterval(() => {
+
+        reproducirTickSorteo();
 
         const nombreAleatorio = participantes[Math.floor(Math.random() * participantes.length)];
         resultadoSorteo.textContent = nombreAleatorio;
@@ -355,6 +494,8 @@ girarRuleta.addEventListener("click", () => {
 
         if (vueltas > totalVueltas) {
             clearInterval(intervalo);
+
+            reproducirFanfarriaSorteo();
 
             const ganador = participantes[Math.floor(Math.random() * participantes.length)];
             resultadoSorteo.textContent = "🎉 Ganador: " + ganador;
@@ -387,38 +528,563 @@ eliminarGanador.addEventListener("click", () => {
 
 const comunidadLista = document.getElementById("comunidadLista");
 
+function formatearWatchtime(minutos) {
+
+    const dias = Math.floor(minutos / 1440);
+    const horas = Math.floor((minutos % 1440) / 60);
+    const mins = minutos % 60;
+
+    let texto = "";
+    if (dias > 0) texto += dias + "d ";
+    if (horas > 0) texto += horas + "h ";
+    texto += mins + "min";
+
+    return texto;
+}
+
+let comunidadDatos = [];
+let campoOrden = "puntos";
+
+const buscarComunidad = document.getElementById("buscarComunidad");
+const mostrarCantidad = document.getElementById("mostrarCantidad");
+let paginaActual = 1;
+function renderComunidad() {
+
+    let filtrado = [...comunidadDatos];
+
+    const texto = buscarComunidad.value.trim().toLowerCase();
+
+    if (texto !== "") {
+        filtrado = filtrado.filter(u => u.usuario.toLowerCase().includes(texto));
+    }
+
+    filtrado.sort((a, b) => b[campoOrden] - a[campoOrden]);
+
+    const usuariosPorPagina = parseInt(mostrarCantidad.value);
+const totalPaginas = Math.ceil(filtrado.length / usuariosPorPagina);
+
+if (paginaActual > totalPaginas) {
+    paginaActual = 1;
+}
+
+const inicio = (paginaActual - 1) * usuariosPorPagina;
+const finPagina = inicio + usuariosPorPagina;
+const paginaDatos = filtrado.slice(inicio, finPagina);
+
+comunidadLista.innerHTML = "";
+
+paginaDatos.forEach((usuario, index) => {
+
+    comunidadLista.innerHTML += `
+    <tr>
+        <td>#${inicio + index + 1}</td>
+        <td>${usuario.usuario}</td>
+        <td>${usuario.mensajes}</td>
+        <td>${usuario.nivel}</td>
+        <td>${usuario.puntos}</td>
+        <td>${formatearWatchtime(usuario.watchtime)}</td>
+    </tr>
+`;
+});
+
+}
+
+buscarComunidad.addEventListener("input", renderComunidad);
+mostrarCantidad.addEventListener("change", renderComunidad);
+
 function cargarComunidad() {
 
     fetch("/api/comunidad")
         .then(response => response.json())
         .then(data => {
-
-            comunidadLista.innerHTML = "";
-
-            data.forEach((usuario) => {
-
-                const fecha = new Date(usuario.ultimaActividad).toLocaleString();
-
-                comunidadLista.innerHTML += `
-    <div class="usuario-card">
-        <div class="usuario-header">
-            <h3>${usuario.usuario}</h3>
-            <span class="nivel">⭐ Nivel ${usuario.nivel}</span>
-            <div class="xp-bar">
-    <div class="xp-fill" style="width:${usuario.xp}%"></div>
-</div>
-        </div>
-
-        <div class="usuario-info">
-            <p>💬 ${usuario.mensajes} mensajes</p>
-            <p>🕒 ${fecha}</p>
-        </div>
-    </div>
-`;
-            });
+            comunidadDatos = data;
+            renderComunidad();
         });
 }
 
 cargarComunidad();
 
 setInterval(cargarComunidad, 10000);
+
+document.querySelectorAll(".ordenable").forEach((th) => {
+
+    th.addEventListener("click", () => {
+        campoOrden = th.dataset.campo;
+        renderComunidad();
+    });
+
+});
+const participantesRuletaVisual = [];
+
+const nombreRuletaVisual = document.getElementById("nombreRuletaVisual");
+const agregarRuletaVisual = document.getElementById("agregarRuletaVisual");
+const listaRuletaVisual = document.getElementById("listaRuletaVisual");
+const ruedaVisual = document.getElementById("ruedaVisual");
+const girarRuedaVisual = document.getElementById("girarRuedaVisual");
+const resultadoRuedaVisual = document.getElementById("resultadoRuedaVisual");
+const barajearRuletaVisual = document.getElementById("barajearRuletaVisual");
+const duracionGiroVisual = document.getElementById("duracionGiroVisual");
+
+const coloresRueda = ["#39ff14", "#ff3b3b", "#facc15", "#8b5cf6", "#2ecc71", "#3b82f6", "#ff8c00", "#ec4899"];
+
+function renderListaRuletaVisual() {
+
+    listaRuletaVisual.innerHTML = "";
+
+  participantesRuletaVisual.forEach((nombre, index) => {
+        listaRuletaVisual.innerHTML += `
+        <li>
+            ${escaparHtml(nombre)}
+            <button class="eliminarRuletaVisual" data-index="${index}">Eliminar</button>
+        </li>
+    `;
+    });
+
+    dibujarRueda();
+}
+
+function dibujarRueda() {
+
+    ruedaVisual.innerHTML = "";
+
+    const total = participantesRuletaVisual.length;
+
+    if (total === 0) {
+        ruedaVisual.style.background = "#1a1a1a";
+        return;
+    }
+
+    const porcion = 360 / total;
+    let gradiente = "conic-gradient(";
+
+    participantesRuletaVisual.forEach((nombre, index) => {
+        const color = coloresRueda[index % coloresRueda.length];
+        const inicio = porcion * index;
+        const fin = porcion * (index + 1);
+        gradiente += `${color} ${inicio}deg ${fin}deg`;
+        if (index < total - 1) gradiente += ", ";
+    });
+
+    gradiente += ")";
+    ruedaVisual.style.background = gradiente;
+
+const radio = ruedaVisual.offsetWidth / 2;
+
+    participantesRuletaVisual.forEach((nombre, index) => {
+
+        const angulo = porcion * index + porcion / 2;
+        const anguloRad = angulo * Math.PI / 180;
+        const distancia = radio * 0.6;
+
+        const x = Math.sin(anguloRad) * distancia;
+        const y = -Math.cos(anguloRad) * distancia;
+
+        const anguloTexto = angulo > 90 && angulo < 270 ? angulo + 180 : angulo;
+
+        const etiqueta = document.createElement("div");
+        etiqueta.className = "segmento-etiqueta";
+        etiqueta.style.left = `calc(50% + ${x}px)`;
+        etiqueta.style.top = `calc(50% + ${y}px)`;
+        etiqueta.style.transform = `translate(-50%, -50%) rotate(${anguloTexto}deg)`;
+        etiqueta.textContent = nombre;
+
+        ruedaVisual.appendChild(etiqueta);
+    });
+
+}
+
+agregarRuletaVisual.addEventListener("click", () => {
+
+    const nombre = nombreRuletaVisual.value.trim();
+
+    if (nombre === "") {
+        alert("Escribe un nombre.");
+        return;
+    }
+
+    participantesRuletaVisual.push(nombre);
+    renderListaRuletaVisual();
+    nombreRuletaVisual.value = "";
+
+});
+
+document.addEventListener("click", (e) => {
+
+    if (e.target.classList.contains("eliminarRuletaVisual")) {
+        const index = parseInt(e.target.dataset.index);
+        participantesRuletaVisual.splice(index, 1);
+        renderListaRuletaVisual();
+    }
+
+});
+
+barajearRuletaVisual.addEventListener("click", () => {
+
+    for (let i = participantesRuletaVisual.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [participantesRuletaVisual[i], participantesRuletaVisual[j]] = [participantesRuletaVisual[j], participantesRuletaVisual[i]];
+    }
+
+    renderListaRuletaVisual();
+
+});
+
+let girando = false;
+
+girarRuedaVisual.addEventListener("click", () => {
+
+    if (girando) return;
+
+    const total = participantesRuletaVisual.length;
+
+    if (total === 0) {
+        alert("Agrega al menos un participante.");
+        return;
+    }
+
+girando = true;
+    resultadoRuedaVisual.textContent = "";
+
+    const segundos = parseFloat(duracionGiroVisual.value) || 4;
+    const porcion = 360 / total;
+
+    const vueltasExtra = 5 * 360;
+    const giroAleatorio = Math.random() * 360;
+    const rotacionFinal = vueltasExtra + giroAleatorio;
+
+    ruedaVisual.style.transition = "none";
+    ruedaVisual.style.transform = "rotate(0deg)";
+
+    ruedaVisual.offsetHeight;
+
+   ruedaVisual.style.transition = `transform ${segundos}s cubic-bezier(0.17, 0.67, 0.12, 0.99)`;
+    ruedaVisual.style.transform = `rotate(${rotacionFinal}deg)`;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function reproducirTick() {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.value = 700;
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+    }
+
+    const intervaloTick = setInterval(reproducirTick, 120);
+
+    function reproducirFanfarria() {
+        const notas = [523, 659, 784, 1047];
+        notas.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime + i * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.12 + 0.3);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(audioCtx.currentTime + i * 0.12);
+            osc.stop(audioCtx.currentTime + i * 0.12 + 0.3);
+        });
+    }
+
+    setTimeout(() => {
+
+        const estilo = getComputedStyle(ruedaVisual).transform;
+        const matriz = estilo.match(/matrix\(([^)]+)\)/);
+
+        let anguloReal = 0;
+
+        if (matriz) {
+            const valores = matriz[1].split(",").map(Number);
+            const a = valores[0];
+            const b = valores[1];
+            anguloReal = Math.atan2(b, a) * (180 / Math.PI);
+            if (anguloReal < 0) anguloReal += 360;
+        }
+
+        const anguloOriginal = (360 - anguloReal) % 360;
+        const indiceGanador = Math.floor(anguloOriginal / porcion) % total;
+
+    clearInterval(intervaloTick);
+        reproducirFanfarria();
+
+        const nombreGanador = participantesRuletaVisual[indiceGanador];
+        resultadoRuedaVisual.textContent = "🎉 Ganador: " + nombreGanador;
+
+        eliminarGanadorRuleta.dataset.nombre = nombreGanador;
+        eliminarGanadorRuleta.style.display = "inline-block";
+
+        girando = false;
+
+    }, segundos * 1000 + 200);
+
+});
+
+const eliminarGanadorRuleta = document.getElementById("eliminarGanadorRuleta");
+
+eliminarGanadorRuleta.addEventListener("click", () => {
+
+    const nombre = eliminarGanadorRuleta.dataset.nombre;
+
+    const index = participantesRuletaVisual.indexOf(nombre);
+
+    if (index !== -1) {
+        participantesRuletaVisual.splice(index, 1);
+        renderListaRuletaVisual();
+    }
+
+    resultadoRuedaVisual.textContent = "";
+    eliminarGanadorRuleta.style.display = "none";
+
+});
+
+const btnSugerencias = document.getElementById("btnSugerencias");
+const cajaSugerencias = document.getElementById("cajaSugerencias");
+const textoSugerencia = document.getElementById("textoSugerencia");
+const enviarSugerencia = document.getElementById("enviarSugerencia");
+
+btnSugerencias.addEventListener("click", () => {
+
+    if (cajaSugerencias.style.display === "none") {
+        cajaSugerencias.style.display = "block";
+    } else {
+        cajaSugerencias.style.display = "none";
+    }
+
+});
+
+enviarSugerencia.addEventListener("click", () => {
+
+    const texto = textoSugerencia.value.trim();
+
+    if (texto === "") {
+        alert("Escribe algo antes de enviar.");
+        return;
+    }
+
+    fetch("/api/sugerencias", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texto: texto })
+    })
+        .then(response => response.json())
+        .then(() => {
+            alert("¡Gracias por tu sugerencia!");
+            textoSugerencia.value = "";
+            cajaSugerencias.style.display = "none";
+        });
+
+});
+function cargarSugerencias() {
+
+    fetch("/api/sugerencias")
+        .then(response => response.json())
+        .then(sugerencias => {
+
+            const listaSugerencias = document.getElementById("listaSugerencias");
+
+            if (sugerencias.length === 0) {
+                listaSugerencias.innerHTML = "<p>No hay sugerencias todavía.</p>";
+                return;
+            }
+
+            listaSugerencias.innerHTML = "";
+
+            sugerencias.forEach(s => {
+
+                const fecha = new Date(s.fecha).toLocaleString();
+
+                listaSugerencias.innerHTML += `
+                    <div style="background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:10px; margin-bottom:8px;">
+                        <p style="margin:0;">${s.texto}</p>
+                        <small style="color:#888;">${fecha}</small>
+                    </div>
+                `;
+
+            });
+
+        });
+
+}
+function actualizarEstadoEnVivo() {
+
+    fetch("/api/estado-vivo")
+        .then(response => response.json())
+        .then(data => {
+
+            const bannerEstado = document.querySelector(".banner-estado");
+
+            if (data.enVivo) {
+                bannerEstado.innerHTML = `<span class="punto-en-vivo" style="background:#22c55e;"></span> EN VIVO`;
+                bannerEstado.style.color = "#22c55e";
+            } else {
+                bannerEstado.innerHTML = `<span class="punto-en-vivo" style="background:#ef4444;"></span> Desconectado`;
+                bannerEstado.style.color = "#ef4444";
+            }
+
+            bannerEstado.style.display = "flex";
+
+        });
+
+}
+
+actualizarEstadoEnVivo();
+setInterval(actualizarEstadoEnVivo, 60000);
+const nuevoAdminUsuario = document.getElementById("nuevoAdminUsuario");
+const nuevoAdminPassword = document.getElementById("nuevoAdminPassword");
+const btnCrearAdmin = document.getElementById("btnCrearAdmin");
+const listaAdmins = document.getElementById("listaAdmins");
+
+function renderAdmins(admins) {
+
+    listaAdmins.innerHTML = "";
+
+    admins.forEach((admin) => {
+
+    const soyDefault = localStorage.getItem("merrdbot_admin_esDefault") === "true";
+
+        const estado = admin.esDefault
+            ? `<span class="usuario-puntos">Default</span>`
+            : (soyDefault
+                ? (admin.activo
+                    ? `<button class="editarUsuario toggleAdmin" data-id="${admin._id}">Activo</button>`
+                    : `<button class="eliminarUsuario toggleAdmin" data-id="${admin._id}">Inactivo</button>`)
+                : "");
+
+        const lapiz = admin.esDefault
+            ? ""
+            : `<button class="editarAdminLapiz" data-id="${admin._id}" data-usuario="${admin.usuario}" title="Editar">✏️</button>`;
+
+        listaAdmins.innerHTML += `
+            <div class="usuario-item">
+                <span class="usuario-nombre">${admin.usuario}</span>
+                ${lapiz}
+                ${estado}
+            </div>
+        `;
+    });
+
+}
+
+function cargarAdmins() {
+
+    fetch("/api/admins")
+        .then(response => response.json())
+        .then(admins => renderAdmins(admins));
+
+}
+
+btnCrearAdmin.addEventListener("click", () => {
+
+    const usuario = nuevoAdminUsuario.value.trim();
+    const password = nuevoAdminPassword.value.trim();
+
+    if (usuario === "" || password === "") {
+        alert("Escribe usuario y contraseña.");
+        return;
+    }
+
+    fetch("/api/admins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usuario: usuario, password: password })
+    })
+        .then(response => response.json().then(data => ({ status: response.status, data })))
+        .then(({ status, data }) => {
+
+            if (status !== 200) {
+                alert(data.error || "No se pudo crear el admin.");
+                return;
+            }
+
+            renderAdmins(data);
+            nuevoAdminUsuario.value = "";
+            nuevoAdminPassword.value = "";
+
+        });
+
+});
+
+document.addEventListener("click", (e) => {
+
+    if (e.target.classList.contains("toggleAdmin")) {
+
+        const id = e.target.dataset.id;
+
+        fetch(`/api/admins/${id}`, { method: "PATCH" })
+            .then(response => response.json().then(data => ({ status: response.status, data })))
+            .then(({ status, data }) => {
+
+                if (status !== 200) {
+                    alert(data.error || "No se pudo cambiar el estado.");
+                    return;
+                }
+
+                renderAdmins(data);
+
+            });
+
+    }
+
+});
+const modalEditarAdmin = document.getElementById("modalEditarAdmin");
+const editarAdminUsuarioInput = document.getElementById("editarAdminUsuarioInput");
+const editarAdminPasswordInput = document.getElementById("editarAdminPasswordInput");
+const guardarEdicionAdmin = document.getElementById("guardarEdicionAdmin");
+const cancelarEdicionAdmin = document.getElementById("cancelarEdicionAdmin");
+
+let idAdminEditando = null;
+
+document.addEventListener("click", (e) => {
+
+    if (e.target.classList.contains("editarAdminLapiz")) {
+
+        idAdminEditando = e.target.dataset.id;
+        editarAdminUsuarioInput.value = e.target.dataset.usuario;
+        editarAdminPasswordInput.value = "";
+
+        modalEditarAdmin.style.display = "flex";
+
+    }
+
+});
+
+cancelarEdicionAdmin.addEventListener("click", () => {
+    modalEditarAdmin.style.display = "none";
+    idAdminEditando = null;
+});
+
+guardarEdicionAdmin.addEventListener("click", () => {
+
+    const nuevoUsuario = editarAdminUsuarioInput.value.trim();
+    const nuevaPassword = editarAdminPasswordInput.value.trim();
+
+    if (nuevoUsuario === "" || nuevaPassword === "") {
+        alert("Completa usuario y contraseña.");
+        return;
+    }
+
+    fetch(`/api/admins/${idAdminEditando}/editar`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usuario: nuevoUsuario, password: nuevaPassword })
+    })
+        .then(response => response.json().then(data => ({ status: response.status, data })))
+        .then(({ status, data }) => {
+
+            if (status !== 200) {
+                alert(data.error || "No se pudo editar el admin.");
+                return;
+            }
+
+            renderAdmins(data);
+            modalEditarAdmin.style.display = "none";
+            idAdminEditando = null;
+
+        });
+
+});

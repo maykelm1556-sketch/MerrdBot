@@ -277,7 +277,11 @@ header h2 {
     outline: none;
     border-color: #39ff14;
 }
-#adminLogin input {
+#adminLogin input,
+#nuevoAdminUsuario,
+#nuevoAdminPassword,
+#editarAdminUsuarioInput,
+#editarAdminPasswordInput {
     background-color: #1a1a1a;
     border: 1px solid #333;
     border-radius: 8px;
@@ -287,7 +291,11 @@ header h2 {
     margin-right: 8px;
 }
 
-#adminLogin input:focus {
+#adminLogin input:focus,
+#nuevoAdminUsuario:focus,
+#nuevoAdminPassword:focus,
+#editarAdminUsuarioInput:focus,
+#editarAdminPasswordInput:focus {
     outline: none;
     border-color: #39ff14;
 }
@@ -346,7 +354,8 @@ header h2 {
 
 #agregarParticipante,
 #girarRuleta,
-#importarEconomia {
+#importarEconomia,
+#importarComunidad {
     background-color: #39ff14;
     color: #0a0a0a;
     border: none;
@@ -360,7 +369,8 @@ header h2 {
 
 #agregarParticipante:hover,
 #girarRuleta:hover,
-#importarEconomia:hover {
+#importarEconomia:hover,
+#importarComunidad:hover {
     background-color: #2ecc10;
 }
 
@@ -595,4 +605,497 @@ label[for="duracionGiro"] {
 
 #btnConectarKick:hover {
     background-color: #2ecc10;
+}
+@media (max-width: 600px) {
+
+    .container {
+        margin: 20px auto;
+        padding: 10px;
+    }
+
+    .banner-streamer {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+    }
+
+    .banner-foto {
+        width: 100px;
+        height: 100px;
+    }
+
+    .banner-nombre {
+        font-size: 28px;
+    }
+
+    .tabs {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .tab {
+        min-width: 0;
+        flex: 1 1 45%;
+        font-size: 14px;
+        padding: 10px 8px;
+    }
+
+    .usuario-item {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .usuario-item .usuario-nombre {
+        width: 100%;
+    }
+
+    .tabla-comunidad {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .comunidad-controles {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #buscarComunidad {
+        min-width: 0;
+    }
+
+    #nombreSorteo,
+    #nombreRuletaVisual,
+    #nombreUsuario {
+        width: 100%;
+        box-sizing: border-box;
+        margin-right: 0;
+        margin-bottom: 8px;
+    }
+
+    #agregarParticipante,
+    #girarRuleta,
+    #importarEconomia,
+    #importarComunidad,
+    #agregarRuletaVisual,
+    #girarRuedaVisual,
+    #barajearRuletaVisual,
+    #importarEconomiaRuleta,
+    #importarComunidadRuleta,
+    #guardarUsuario,
+    #btnNuevoUsuario {
+        width: 100%;
+        margin-left: 0;
+        margin-bottom: 8px;
+        box-sizing: border-box;
+    }
+
+    #contenedorRuedaVisual {
+        width: 220px;
+        height: 220px;
+    }
+
+    #modalEditarContenido,
+    #modalPuntosMinimosContenido {
+        width: 85%;
+        max-width: 300px;
+    }
+
+    #adminLogin input {
+        width: 100%;
+        box-sizing: border-box;
+        margin-right: 0;
+        margin-bottom: 8px;
+    }
+
+    .banner-streamer,
+    .banner-info {
+        align-items: center;
+    }
+
+}
+.tabla-comunidad {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.tabla-comunidad thead th {
+    text-align: left;
+    color: #39ff14;
+    font-size: 13px;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    border-bottom: 1px solid #333;
+}
+
+.tabla-comunidad tbody td {
+    padding: 14px;
+    color: #ffffff;
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 14px;
+}
+
+.tabla-comunidad tbody tr:hover {
+    background-color: #1a1a1a;
+}
+.ordenable {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s ease;
+}
+
+.ordenable:hover {
+    color: #ffffff;
+}
+.comunidad-controles {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+#buscarComunidad {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: #ffffff;
+    font-size: 14px;
+    flex: 1;
+    min-width: 180px;
+}
+
+#buscarComunidad:focus {
+    outline: none;
+    border-color: #39ff14;
+}
+
+.comunidad-controles label {
+    color: #ffffff;
+    font-size: 14px;
+}
+
+#mostrarCantidad {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+#mostrarCantidad:focus {
+    outline: none;
+    border-color: #39ff14;
+}
+#contenedorRuedaVisual {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    margin: 25px auto;
+}
+
+#ruedaVisual {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 4px solid #333;
+    position: relative;
+    transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+    overflow: hidden;
+}
+
+#puntero {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 22px solid #39ff14;
+    z-index: 10;
+}
+
+.segmento-etiqueta {
+    position: absolute;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 12px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+    white-space: nowrap;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#nombreRuletaVisual {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: #ffffff;
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+#nombreRuletaVisual:focus {
+    outline: none;
+    border-color: #39ff14;
+}
+
+#agregarRuletaVisual,
+#girarRuedaVisual,
+#importarEconomiaRuleta,
+#importarComunidadRuleta {
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#agregarRuletaVisual:hover,
+#girarRuedaVisual:hover,
+#importarEconomiaRuleta:hover,
+#importarComunidadRuleta:hover {
+    background-color: #2ecc10;
+}
+
+#listaRuletaVisual {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0;
+}
+
+#listaRuletaVisual li {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.eliminarRuletaVisual {
+    background-color: #ff3b3b;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+#resultadoRuedaVisual {
+    color: #39ff14;
+    text-align: center;
+    margin-top: 15px;
+}
+#barajearRuletaVisual {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#barajearRuletaVisual:hover {
+    opacity: 0.8;
+}
+
+label[for="duracionGiroVisual"] {
+    color: #ffffff;
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+#duracionGiroVisual {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: #ffffff;
+    font-size: 14px;
+    width: 100px;
+}
+#modalPuntosMinimos {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+#modalPuntosMinimosContenido {
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    padding: 25px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#modalPuntosMinimosContenido h3 {
+    color: #ffffff;
+    margin: 0 0 5px 0;
+}
+#modalPuntosMinimos {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+#modalPuntosMinimosContenido {
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    padding: 25px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#modalPuntosMinimosContenido h3 {
+    color: #ffffff;
+    margin: 0 0 5px 0;
+}
+
+#puntosMinimosInput {
+    background-color: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+#puntosMinimosInput:focus {
+    outline: none;
+    border-color: #39ff14;
+}
+
+#confirmarPuntosMinimos {
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#cancelarPuntosMinimos {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 8px;
+}
+#eliminarGanadorRuleta {
+    background-color: #ff3b3b;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+#eliminarGanadorRuleta:hover {
+    opacity: 0.8;
+}
+#btnCrearAdmin {
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 8px;
+    transition: background-color 0.2s ease;
+}
+#modalEditarAdmin {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+#modalEditarAdminContenido {
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    padding: 25px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#modalEditarAdminContenido h3 {
+    color: #ffffff;
+    margin: 0 0 5px 0;
+}
+#guardarEdicionAdmin {
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#cancelarEdicionAdmin {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 8px;
 }

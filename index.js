@@ -49,29 +49,65 @@ const comunidadSchema = new mongoose.Schema({
     },
     ultimaActividad: Date
 });
+const sugerenciaSchema = new mongoose.Schema({
+    texto: String,
+    fecha: { type: Date, default: Date.now }
+});
 
+const Sugerencia = mongoose.model("Sugerencia", sugerenciaSchema);
+
+app.post("/api/sugerencias", async (req, res) => {
+
+    const texto = req.body.texto;
+
+    if (!texto || texto.trim() === "") {
+        res.status(400).json({ error: "Escribe algo antes de enviar." });
+        return;
+    }
+
+    const nuevaSugerencia = new Sugerencia({ texto: texto.trim() });
+    await nuevaSugerencia.save();
+
+    res.json({ ok: true });
+
+});
+
+app.get("/api/sugerencias", async (req, res) => {
+
+    const sugerencias = await Sugerencia.find().sort({ fecha: -1 });
+    res.json(sugerencias);
+
+});
 const Comunidad = mongoose.model("Comunidad", comunidadSchema);
 
 const adminSchema = new mongoose.Schema({
     usuario: String,
     password: String,
-    creado_en: Date
+    creado_en: Date,
+    esDefault: { type: Boolean, default: false },
+    activo: { type: Boolean, default: true }
 });
 
 const Admin = mongoose.model("Admin", adminSchema);
-
 async function crearAdminPorDefecto() {
 
-    const existente = await Admin.findOne({ usuario: "Maykel" });
+    const existente = await Admin.findOne({ usuario: { $regex: /^maykel$/i } });
 
     if (!existente) {
         const nuevoAdmin = new Admin({
             usuario: "Maykel",
             password: "12345",
-            creado_en: new Date()
+            creado_en: new Date(),
+            esDefault: true,
+            activo: true
         });
         await nuevoAdmin.save();
         console.log("Admin por defecto creado (Maykel) ✅");
+    } else if (!existente.esDefault) {
+        existente.esDefault = true;
+        existente.activo = true;
+        await existente.save();
+        console.log("Admin Maykel marcado como default ✅");
     }
 
 }
@@ -207,6 +243,27 @@ app.get("/auth/kick/callback", async (req, res) => {
 });
 
 const KICK_SLUG = "eloviedo";
+app.get("/api/estado-vivo", async (req, res) => {
+
+    try {
+
+      const respuesta = await fetch(`https://kick.com/api/v2/channels/${KICK_SLUG}`, {
+    headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+});
+        const datos = await respuesta.json();
+console.log("Livestream recibido:", datos.livestream);
+        const enVivo = datos && datos.livestream !== null && datos.livestream !== undefined;
+
+        res.json({ enVivo: enVivo });
+
+    } catch (error) {
+        console.error("Error consultando estado de Kick:", error.message);
+        res.json({ enVivo: false });
+    }
+
+});
 const PUSHER_WS_URL = "wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0-rc2&flash=false";
 
 async function enviarMensajeChat(texto) {
@@ -320,6 +377,96 @@ app.get("/api/comunidad", async (req, res) => {
 
 });
 
+app.get("/api/admins", async (req, res) => {
+
+    const admins = await Admin.find({}, { password: 0 });
+    res.json(admins);
+
+});
+
+app.patch("/api/admins/:id", async (req, res) => {
+
+    const id = req.params.id;
+
+    const admin = await Admin.findById(id);
+
+    if (!admin) {
+        res.status(404).json({ error: "Admin no encontrado." });
+        return;
+    }
+
+    if (admin.esDefault) {
+        res.status(403).json({ error: "No se puede desactivar al admin por defecto." });
+        return;
+    }
+
+    admin.activo = !admin.activo;
+    await admin.save();
+
+    const admins = await Admin.find({}, { password: 0 });
+    res.json(admins);
+
+});
+app.patch("/api/admins/:id/editar", async (req, res) => {
+
+    const id = req.params.id;
+    const nuevoUsuario = req.body.usuario;
+    const nuevaPassword = req.body.password;
+
+    const admin = await Admin.findById(id);
+
+    if (!admin) {
+        res.status(404).json({ error: "Admin no encontrado." });
+        return;
+    }
+
+    if (!nuevoUsuario || nuevoUsuario.trim() === "" || !nuevaPassword || nuevaPassword.trim() === "") {
+        res.status(400).json({ error: "Falta usuario o contraseña." });
+        return;
+    }
+
+    admin.usuario = nuevoUsuario.trim();
+    admin.password = nuevaPassword.trim();
+
+    await admin.save();
+
+    const admins = await Admin.find({}, { password: 0 });
+    res.json(admins);
+
+});
+app.post("/api/admins", async (req, res) => {
+
+    const usuario = req.body.usuario;
+    const password = req.body.password;
+
+    if (!usuario || usuario.trim() === "" || !password || password.trim() === "") {
+        res.status(400).json({ error: "Falta usuario o contraseña." });
+        return;
+    }
+
+    const existente = await Admin.findOne({ usuario: usuario.trim() });
+
+    if (existente) {
+        res.status(400).json({ error: "Ese usuario ya existe." });
+        return;
+    }
+
+    const nuevoAdmin = new Admin({
+        usuario: usuario.trim(),
+        password: password.trim(),
+        creado_en: new Date(),
+        esDefault: false,
+        activo: true
+    });
+
+    await nuevoAdmin.save();
+
+    const admins = await Admin.find({}, { password: 0 });
+    res.json(admins);
+
+});
+
+
 app.post("/api/admin/login", async (req, res) => {
 
     const usuario = req.body.usuario;
@@ -332,7 +479,12 @@ app.post("/api/admin/login", async (req, res) => {
         return;
     }
 
-    res.json({ ok: true, usuario: admin.usuario });
+    if (!admin.activo) {
+        res.status(403).json({ error: "Este usuario administrador está desactivado." });
+        return;
+    }
+
+    res.json({ ok: true, usuario: admin.usuario, esDefault: admin.esDefault });
 
 });
 
@@ -405,6 +557,27 @@ app.delete("/api/economia/:nombre", async (req, res) => {
 
     const economia = await Usuario.find();
     res.json(economia);
+
+});
+
+app.delete("/api/admins/:id", async (req, res) => {
+
+    const id = req.params.id;
+
+    const admin = await Admin.findById(id);
+
+    if (admin && admin.esDefault) {
+        const otrosDefault = await Admin.countDocuments({ esDefault: true, _id: { $ne: id } });
+        if (otrosDefault === 0) {
+            res.status(403).json({ error: "No puedes borrar el único admin por defecto." });
+            return;
+        }
+    }
+
+    await Admin.findByIdAndDelete(id);
+
+    const admins = await Admin.find({}, { password: 0 });
+    res.json(admins);
 
 });
 

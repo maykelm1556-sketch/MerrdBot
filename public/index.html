@@ -16,10 +16,10 @@
         <img src="foto-streamer.png.png" alt="Foto del streamer" class="banner-foto">
 
         <div class="banner-info">
-            <div class="banner-estado">
-                <span class="punto-en-vivo"></span> EN VIVO
-            </div>
-            <h1 class="banner-nombre">MerrdBot</h1>
+            <h1 class="banner-nombre">ElOviedo</h1>
+<div class="banner-estado">
+    <span class="punto-en-vivo"></span> EN VIVO
+</div>
         </div>
 
     </div>
@@ -42,6 +42,10 @@
 
             <button class="tab" data-tab="sorteos">
                 🎡 Sorteos
+            </button>
+
+            <button class="tab" data-tab="ruleta">
+                🎯 Ruleta
             </button>
 
         </div>
@@ -92,19 +96,44 @@
                     </div>
 
                 </div>
-
-            </div>
+</div>
 
             <!-- COMUNIDAD -->
 
             <div class="tab-panel" id="comunidad">
 
-                <h2>Comunidad</h2>
+               <h2>Comunidad</h2>
 
-                <div id="comunidadLista" class="comunidad-lista">
-    <!-- Los usuarios de Comunidad aparecerán aquí -->
-</div>
+                <div class="comunidad-controles">
 
+                    <input type="text" id="buscarComunidad" placeholder="Buscar...">
+
+                    <label for="mostrarCantidad">Mostrar:</label>
+                    <select id="mostrarCantidad">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="9999">Todos</option>
+                    </select>
+
+                </div>
+
+                <table class="tabla-comunidad">
+                    <thead>
+                        <tr>
+                            <th>Posición</th>
+                            <th>Nombre</th>
+                            <th class="ordenable" data-campo="mensajes">Mensajes</th>
+                            <th class="ordenable" data-campo="nivel">Nivel</th>
+                            <th class="ordenable" data-campo="puntos">Puntos</th>
+                            <th class="ordenable" data-campo="watchtime">Watchtime</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comunidadLista">
+                        <!-- Los usuarios de Comunidad aparecerán aquí -->
+                    </tbody>
+                </table>
+<div id="paginacionComunidad" style="display:flex; gap:8px; margin-top:16px; justify-content:center;"></div>
             </div>
 
             <!-- SORTEOS -->
@@ -126,6 +155,10 @@
                     Traer usuarios de Economía
                 </button>
 
+                <button id="importarComunidad" class="admin-only">
+                    Traer usuarios de Comunidad
+                </button>
+
                 <ul id="listaParticipantes"></ul>
 
                <label for="duracionGiro">Duración del giro (segundos):</label>
@@ -140,8 +173,53 @@
 
             </div>
 
-            <!-- ADMIN -->
+          <!-- RULETA -->
 
+            <div class="tab-panel" id="ruleta">
+
+                <h2>Ruleta</h2>
+
+                <input
+                    type="text"
+                    id="nombreRuletaVisual"
+                    placeholder="Nombre del participante">
+
+                <button id="agregarRuletaVisual" class="admin-only">
+                    Agregar
+                </button>
+
+                <button id="importarEconomiaRuleta" class="admin-only">
+                    Traer usuarios de Economía
+                </button>
+
+                <button id="importarComunidadRuleta" class="admin-only">
+                    Traer usuarios de Comunidad
+                </button>
+
+              <ul id="listaRuletaVisual"></ul>
+
+                <label for="duracionGiroVisual">Duración del giro (segundos):</label>
+                <input type="number" id="duracionGiroVisual" value="4" min="1" max="10" step="0.5">
+
+                <div id="contenedorRuedaVisual">
+                    <div id="puntero"></div>
+                    <div id="ruedaVisual"></div>
+                </div>
+
+                <button id="girarRuedaVisual" class="admin-only">
+                    Girar
+                </button>
+
+                <button id="barajearRuletaVisual" class="admin-only" style="margin-left: 20px;">
+                    🔀 Barajear
+                </button>
+
+             <h3 id="resultadoRuedaVisual"></h3>
+                <button id="eliminarGanadorRuleta" class="admin-only" style="display:none;">Quitar ganador de la lista</button>
+
+            </div>
+
+            <!-- ADMIN -->
             <div class="tab-panel" id="admin">
 
                 <h2>Panel Admin</h2>
@@ -165,7 +243,19 @@
                     <a href="/auth/kick" id="btnConectarKick">
                         Conectar con Kick
                     </a>
+                    <h3 style="margin-top: 24px;">💬 Sugerencias recibidas</h3>
+<div id="listaSugerencias"></div>
+<h3 style="margin-top: 24px;">👥 Administradores</h3>
 
+<div id="adminLogin">
+
+    <input type="text" id="nuevoAdminUsuario" placeholder="Usuario">
+    <input type="text" id="nuevoAdminPassword" placeholder="Contraseña">
+    <button id="btnCrearAdmin">Crear admin</button>
+
+</div>
+
+<div id="listaAdmins"></div>
                 </div>
 
             </div>
@@ -177,7 +267,90 @@
 
 </div>
 
-<script src="script.js"></script>
+<div id="modalPuntosMinimos" style="display:none;">
 
+    <div id="modalPuntosMinimosContenido">
+
+        <h3>Puntos mínimos para el sorteo</h3>
+
+        <input type="text" id="puntosMinimosInput" placeholder="Ej: 6000">
+
+        <div>
+            <button id="confirmarPuntosMinimos">Confirmar</button>
+            <button id="cancelarPuntosMinimos">Cancelar</button>
+        </div>
+
+    </div>
+
+</div>
+<div id="modalEditarAdmin" style="display:none;">
+
+    <div id="modalEditarAdminContenido">
+
+        <h3>Editar administrador</h3>
+
+        <input type="text" id="editarAdminUsuarioInput" placeholder="Usuario">
+        <input type="text" id="editarAdminPasswordInput" placeholder="Contraseña">
+
+        <div>
+            <button id="guardarEdicionAdmin">Guardar cambios</button>
+            <button id="cancelarEdicionAdmin">Cancelar</button>
+        </div>
+
+    </div>
+
+</div>
+<button id="btnSugerencias" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #22c55e;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 1000;
+">💬</button>
+
+<div id="cajaSugerencias" style="
+    display: none;
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 16px;
+    width: 280px;
+    z-index: 1000;
+">
+    <p style="color: white; margin: 0 0 10px 0;">¿Alguna sugerencia u opinión?</p>
+    <textarea id="textoSugerencia" placeholder="Escribe aquí..." style="
+        width: 100%;
+        height: 80px;
+        border-radius: 6px;
+        border: 1px solid #333;
+        background: #111;
+        color: white;
+        padding: 8px;
+        box-sizing: border-box;
+        resize: none;
+    "></textarea>
+    <button id="enviarSugerencia" style="
+        margin-top: 8px;
+        width: 100%;
+        background: #22c55e;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px;
+        cursor: pointer;
+    ">Enviar</button>
+</div>
+<script src="script.js"></script>
 </body>
 </html>
