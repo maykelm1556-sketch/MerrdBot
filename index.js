@@ -256,9 +256,15 @@ async function verificarEnVivo() {
             }
         });
 
+        console.log("Status consulta en vivo:", respuesta.status);
+
         const datos = await respuesta.json();
 
+        console.log("Livestream recibido:", datos.livestream, "| error de Kick:", datos.error);
+
         canalEnVivo = datos && datos.livestream !== null && datos.livestream !== undefined;
+
+        console.log("canalEnVivo actualizado a:", canalEnVivo);
 
     } catch (error) {
         console.error("Error consultando estado de Kick:", error.message);
