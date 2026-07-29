@@ -345,13 +345,47 @@ const KICK_SLUG = "eloviedo";
 
 let canalEnVivo = false;
 
+async function obtenerAccessTokenValido() {
+
+    let auth = await KickAuth.findOne();
+
+    if (!auth) {
+        return null;
+    }
+
+    const minutosDesdeCreacion = (Date.now() - new Date(auth.creado_en).getTime()) / 60000;
+    const minutosDeVida = auth.expires_in / 60;
+
+    if (minutosDesdeCreacion >= minutosDeVida - 10) {
+
+        const authRenovado = await renovarTokenKick(auth);
+
+        if (!authRenovado) {
+            return null;
+        }
+
+        auth = authRenovado;
+    }
+
+    return auth.access_token;
+
+}
+
 async function verificarEnVivo() {
 
     try {
 
-        const respuesta = await fetch(`https://kick.com/api/v2/channels/${KICK_SLUG}`, {
+        const accessToken = await obtenerAccessTokenValido();
+
+        if (!accessToken) {
+            console.log("No hay token de Kick guardado/valido. Conecta con Kick desde el panel Admin.");
+            canalEnVivo = false;
+            return;
+        }
+
+        const respuesta = await fetch(`https://api.kick.com/public/v1/channels?slug=${KICK_SLUG}`, {
             headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                "Authorization": `Bearer ${accessToken}`
             }
         });
 
@@ -359,9 +393,9 @@ async function verificarEnVivo() {
 
         const datos = await respuesta.json();
 
-        console.log("Livestream recibido:", datos.livestream, "| error de Kick:", datos.error);
+        const canal = datos.data && datos.data[0];
 
-        canalEnVivo = datos && datos.livestream !== null && datos.livestream !== undefined;
+        canalEnVivo = !!(canal && canal.stream && canal.stream.is_live);
 
         console.log("canalEnVivo actualizado a:", canalEnVivo);
 
@@ -373,11 +407,38 @@ async function verificarEnVivo() {
 }
 
 verificarEnVivo();
-setInterval(verificarEnVivo, 60000);
+setInterval(verificarEnVivo, 20000);
 
 app.get("/api/estado-vivo", (req, res) => {
     res.json({ enVivo: canalEnVivo });
 });
+
+async function sumarPorTiempoEnVivo() {
+
+    if (!canalEnVivo) return;
+
+    const limite = new Date(Date.now() - 15 * 60000);
+
+    const usuariosActivos = await Comunidad.find({ ultimaActividad: { $gte: limite } });
+
+    for (const usuario of usuariosActivos) {
+
+        usuario.watchtime += 1;
+        usuario.puntos += 1;
+        usuario.xp += 1;
+
+        if (usuario.xp >= 100) {
+            usuario.nivel += 1;
+            usuario.xp -= 100;
+        }
+
+        await usuario.save();
+
+    }
+
+}
+
+setInterval(sumarPorTiempoEnVivo, 60000);
 
 app.post("/api/musica/agregar", async (req, res) => {
 
