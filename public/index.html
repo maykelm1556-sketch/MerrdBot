@@ -11,15 +11,58 @@
 
 <div class="container">
 
+    <div id="menuAdminContenedor">
+
+        <button id="btnAdminCorona" title="Panel Admin">👑</button>
+
+        <div id="dropdownAdmin" style="display:none;">
+
+            <h2>Panel Admin</h2>
+
+            <div id="adminLogin">
+
+                <input type="text" id="adminUsuario" placeholder="Usuario">
+                <input type="password" id="adminPassword" placeholder="Contraseña">
+                <button id="btnAdminLogin">Ingresar</button>
+
+                <p id="adminError" style="display:none;">Usuario o contraseña incorrectos.</p>
+
+            </div>
+
+            <div id="adminPanel" style="display:none;">
+
+                <a href="/auth/kick" id="btnConectarKick">
+                    Conectar con Kick
+                </a>
+
+                <h3 style="margin-top: 24px;">💬 Sugerencias recibidas</h3>
+                <div id="listaSugerencias"></div>
+
+                <h3 style="margin-top: 24px;">👥 Administradores</h3>
+
+                <div id="crearAdminForm">
+                    <input type="text" id="nuevoAdminUsuario" placeholder="Usuario">
+                    <input type="text" id="nuevoAdminPassword" placeholder="Contraseña">
+                    <button id="btnCrearAdmin">Crear admin</button>
+                </div>
+
+                <div id="listaAdmins"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
     <div class="banner-streamer">
 
         <img src="foto-streamer.png.png" alt="Foto del streamer" class="banner-foto">
 
         <div class="banner-info">
             <h1 class="banner-nombre">ElOviedo</h1>
-<div class="banner-estado">
-    <span class="punto-en-vivo"></span> EN VIVO
-</div>
+            <div class="banner-estado">
+                <span class="punto-en-vivo"></span> EN VIVO
+            </div>
         </div>
 
     </div>
@@ -36,16 +79,16 @@
                 👥 Comunidad
             </button>
 
-            <button class="tab" data-tab="admin">
-                ⚙️ Admin
-            </button>
-
             <button class="tab" data-tab="sorteos">
                 🎡 Sorteos
             </button>
 
             <button class="tab" data-tab="ruleta">
                 🎯 Ruleta
+            </button>
+
+            <button class="tab" data-tab="musica">
+                🎵 Música
             </button>
 
         </div>
@@ -58,7 +101,7 @@
 
                 <h2>Economía</h2>
 
-            <button id="btnNuevoUsuario" class="admin-only">
+                <button id="btnNuevoUsuario" class="admin-only">
                     + Agregar usuario a Economía
                 </button>
 
@@ -75,9 +118,9 @@
 
                 </div>
 
-               <div id="economiaLista">
-    <!-- Los usuarios de Economía aparecerán aquí -->
-</div>
+                <div id="economiaLista">
+                    <!-- Los usuarios de Economía aparecerán aquí -->
+                </div>
 
                 <div id="modalEditar" style="display:none;">
 
@@ -96,13 +139,14 @@
                     </div>
 
                 </div>
-</div>
+
+            </div>
 
             <!-- COMUNIDAD -->
 
             <div class="tab-panel" id="comunidad">
 
-               <h2>Comunidad</h2>
+                <h2>Comunidad</h2>
 
                 <div class="comunidad-controles">
 
@@ -133,7 +177,9 @@
                         <!-- Los usuarios de Comunidad aparecerán aquí -->
                     </tbody>
                 </table>
-<div id="paginacionComunidad" style="display:flex; gap:8px; margin-top:16px; justify-content:center;"></div>
+
+                <div id="paginacionComunidad" style="display:flex; gap:8px; margin-top:16px; justify-content:center;"></div>
+
             </div>
 
             <!-- SORTEOS -->
@@ -147,21 +193,27 @@
                     id="nombreSorteo"
                     placeholder="Nombre del participante">
 
-               <button id="agregarParticipante" class="admin-only">
+                <button id="agregarParticipante" class="admin-only">
                     Agregar
                 </button>
+<div class="menu-sincronizar admin-only">
+                    <button id="btnSincronizarSorteos">🔄 Sincronizar usuarios ▼</button>
+                    <div id="dropdownSincronizarSorteos" style="display:none;">
+                        <button id="importarEconomia">Desde Economía</button>
+                        <button id="importarComunidad">Desde Comunidad</button>
+                    </div>
+                </div>
 
-                <button id="importarEconomia" class="admin-only">
-                    Traer usuarios de Economía
-                </button>
-
-                <button id="importarComunidad" class="admin-only">
-                    Traer usuarios de Comunidad
-                </button>
+                <div class="admin-only" style="margin-top:16px; margin-bottom:16px;">
+                    <label for="comandoAutoSorteosInput">Comando para unirse por chat:</label>
+                    <input type="text" id="comandoAutoSorteosInput" placeholder="Ej: !entrar">
+                    <button id="toggleComandoAutoSorteos">Desactivado</button>
+                    <button id="guardarComandoAutoSorteos">Guardar</button>
+                </div>
 
                 <ul id="listaParticipantes"></ul>
 
-               <label for="duracionGiro">Duración del giro (segundos):</label>
+                <label for="duracionGiro">Duración del giro (segundos):</label>
                 <input type="number" id="duracionGiro" value="1.5" min="0.5" max="10" step="0.5">
 
                 <button id="girarRuleta" class="admin-only">
@@ -173,13 +225,13 @@
 
             </div>
 
-          <!-- RULETA -->
+            <!-- RULETA -->
 
             <div class="tab-panel" id="ruleta">
 
                 <h2>Ruleta</h2>
 
-                <input
+             <input
                     type="text"
                     id="nombreRuletaVisual"
                     placeholder="Nombre del participante">
@@ -188,15 +240,22 @@
                     Agregar
                 </button>
 
-                <button id="importarEconomiaRuleta" class="admin-only">
-                    Traer usuarios de Economía
-                </button>
+               <div class="menu-sincronizar admin-only">
+                    <button id="btnSincronizarRuleta">🔄 Sincronizar usuarios ▼</button>
+                    <div id="dropdownSincronizarRuleta" style="display:none;">
+                        <button id="importarEconomiaRuleta">Desde Economía</button>
+                        <button id="importarComunidadRuleta">Desde Comunidad</button>
+                    </div>
+                </div>
 
-                <button id="importarComunidadRuleta" class="admin-only">
-                    Traer usuarios de Comunidad
-                </button>
+                <div class="admin-only" style="margin-top:16px; margin-bottom:16px;">
+                    <label for="comandoAutoRuletaInput">Comando para unirse por chat:</label>
+                    <input type="text" id="comandoAutoRuletaInput" placeholder="Ej: !ruleta">
+                    <button id="toggleComandoAutoRuleta">Desactivado</button>
+                    <button id="guardarComandoAutoRuleta">Guardar</button>
+                </div>
 
-              <ul id="listaRuletaVisual"></ul>
+            <ul id="listaRuletaVisual"></ul>
 
                 <label for="duracionGiroVisual">Duración del giro (segundos):</label>
                 <input type="number" id="duracionGiroVisual" value="4" min="1" max="10" step="0.5">
@@ -214,56 +273,30 @@
                     🔀 Barajear
                 </button>
 
-             <h3 id="resultadoRuedaVisual"></h3>
+                <h3 id="resultadoRuedaVisual"></h3>
                 <button id="eliminarGanadorRuleta" class="admin-only" style="display:none;">Quitar ganador de la lista</button>
 
             </div>
 
-            <!-- ADMIN -->
-            <div class="tab-panel" id="admin">
+            <!-- MÚSICA -->
 
-                <h2>Panel Admin</h2>
+            <div class="tab-panel" id="musica">
 
-                <div id="adminLogin">
+                <h2>Música</h2>
 
-                    <input type="text" id="adminUsuario" placeholder="Usuario">
-                    <input type="password" id="adminPassword" placeholder="Contraseña">
-                    <button id="btnAdminLogin">Ingresar</button>
-
-                    <p id="adminError" style="display:none;">Usuario o contraseña incorrectos.</p>
-
+                <div id="reproductorYoutubeContenedor">
+                    <div id="reproductorYoutube"></div>
                 </div>
 
-                <div id="adminPanel" style="display:none;">
+                <h3>Cola de reproducción</h3>
 
-                    <button id="btn-agregar-usuario">
-                        Agregar usuario de prueba
-                    </button>
-
-                    <a href="/auth/kick" id="btnConectarKick">
-                        Conectar con Kick
-                    </a>
-                    <h3 style="margin-top: 24px;">💬 Sugerencias recibidas</h3>
-<div id="listaSugerencias"></div>
-<h3 style="margin-top: 24px;">👥 Administradores</h3>
-
-<div id="adminLogin">
-
-    <input type="text" id="nuevoAdminUsuario" placeholder="Usuario">
-    <input type="text" id="nuevoAdminPassword" placeholder="Contraseña">
-    <button id="btnCrearAdmin">Crear admin</button>
-
-</div>
-
-<div id="listaAdmins"></div>
-                </div>
+                <ul id="listaColaMusica"></ul>
 
             </div>
 
         </div>
 
     </div>
-
 
 </div>
 
@@ -283,6 +316,7 @@
     </div>
 
 </div>
+
 <div id="modalEditarAdmin" style="display:none;">
 
     <div id="modalEditarAdminContenido">
@@ -300,6 +334,7 @@
     </div>
 
 </div>
+
 <button id="btnSugerencias" style="
     position: fixed;
     bottom: 20px;
@@ -351,6 +386,9 @@
         cursor: pointer;
     ">Enviar</button>
 </div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
 <script src="script.js"></script>
+
 </body>
 </html>

@@ -7,6 +7,29 @@ function escaparHtml(texto) {
 const tabs = document.querySelectorAll(".tab");
 const panels = document.querySelectorAll(".tab-panel");
 
+const btnAdminCorona = document.getElementById("btnAdminCorona");
+const dropdownAdmin = document.getElementById("dropdownAdmin");
+
+btnAdminCorona.addEventListener("click", () => {
+
+    if (dropdownAdmin.style.display === "block") {
+        dropdownAdmin.style.display = "none";
+    } else {
+        dropdownAdmin.style.display = "block";
+    }
+
+});
+
+document.addEventListener("click", (e) => {
+
+    const dentroDelMenu = document.getElementById("menuAdminContenedor").contains(e.target);
+
+    if (!dentroDelMenu && dropdownAdmin.style.display === "block") {
+        dropdownAdmin.style.display = "none";
+    }
+
+});
+
 tabs.forEach(tab => {
 
     tab.addEventListener("click", () => {
@@ -314,6 +337,31 @@ const puntosMinimosInput = document.getElementById("puntosMinimosInput");
 const confirmarPuntosMinimos = document.getElementById("confirmarPuntosMinimos");
 const cancelarPuntosMinimos = document.getElementById("cancelarPuntosMinimos");
 
+const btnSincronizarSorteos = document.getElementById("btnSincronizarSorteos");
+const dropdownSincronizarSorteos = document.getElementById("dropdownSincronizarSorteos");
+const btnSincronizarRuleta = document.getElementById("btnSincronizarRuleta");
+const dropdownSincronizarRuleta = document.getElementById("dropdownSincronizarRuleta");
+
+btnSincronizarSorteos.addEventListener("click", () => {
+    dropdownSincronizarSorteos.style.display = dropdownSincronizarSorteos.style.display === "block" ? "none" : "block";
+});
+
+btnSincronizarRuleta.addEventListener("click", () => {
+    dropdownSincronizarRuleta.style.display = dropdownSincronizarRuleta.style.display === "block" ? "none" : "block";
+});
+
+document.addEventListener("click", (e) => {
+
+    if (!btnSincronizarSorteos.contains(e.target) && !dropdownSincronizarSorteos.contains(e.target)) {
+        dropdownSincronizarSorteos.style.display = "none";
+    }
+
+    if (!btnSincronizarRuleta.contains(e.target) && !dropdownSincronizarRuleta.contains(e.target)) {
+        dropdownSincronizarRuleta.style.display = "none";
+    }
+
+});
+
 importarEconomia.addEventListener("click", () => {
 
     if (economia.length === 0) {
@@ -343,10 +391,11 @@ importarComunidad.addEventListener("click", () => {
         return;
     }
 
-    origenImportacion = "comunidad";
+   origenImportacion = "comunidad";
     destinoImportacion = "sorteos";
     puntosMinimosInput.value = "";
     modalPuntosMinimos.style.display = "flex";
+    dropdownSincronizarSorteos.style.display = "none";
 
 });
 
@@ -360,10 +409,11 @@ importarEconomiaRuleta.addEventListener("click", () => {
         return;
     }
 
-    origenImportacion = "economia";
+ origenImportacion = "economia";
     destinoImportacion = "ruleta";
     puntosMinimosInput.value = "";
     modalPuntosMinimos.style.display = "flex";
+    dropdownSincronizarRuleta.style.display = "none";
 
 });
 
@@ -374,10 +424,11 @@ importarComunidadRuleta.addEventListener("click", () => {
         return;
     }
 
-    origenImportacion = "comunidad";
+   origenImportacion = "comunidad";
     destinoImportacion = "ruleta";
     puntosMinimosInput.value = "";
     modalPuntosMinimos.style.display = "flex";
+    dropdownSincronizarRuleta.style.display = "none";
 
 });
 
@@ -627,7 +678,7 @@ const resultadoRuedaVisual = document.getElementById("resultadoRuedaVisual");
 const barajearRuletaVisual = document.getElementById("barajearRuletaVisual");
 const duracionGiroVisual = document.getElementById("duracionGiroVisual");
 
-const coloresRueda = ["#39ff14", "#ff3b3b", "#facc15", "#8b5cf6", "#2ecc71", "#3b82f6", "#ff8c00", "#ec4899"];
+const coloresRueda = ["#39ff14", "#ff3b3b", "#facc15", "#8b5cf6", "#2ecc71", "#3b82f6", "#ff8c00", "#ec4899", "#06b6d4", "#f472b6", "#a3e635", "#fb923c", "#818cf8", "#facc15", "#f87171", "#34d399"];
 
 function renderListaRuletaVisual() {
 
@@ -671,23 +722,35 @@ function dibujarRueda() {
     ruedaVisual.style.background = gradiente;
 
 const radio = ruedaVisual.offsetWidth / 2;
+    const distanciaBase = total > 8 ? radio * 0.72 : radio * 0.58;
+
+    let tamanoFuente = 12;
+    let anchoMaximo = 80;
+
+    if (total > 8) {
+        tamanoFuente = 10;
+        anchoMaximo = 55;
+    }
+    if (total > 14) {
+        tamanoFuente = 8;
+        anchoMaximo = 45;
+    }
 
     participantesRuletaVisual.forEach((nombre, index) => {
 
         const angulo = porcion * index + porcion / 2;
         const anguloRad = angulo * Math.PI / 180;
-        const distancia = radio * 0.6;
 
-        const x = Math.sin(anguloRad) * distancia;
-        const y = -Math.cos(anguloRad) * distancia;
-
-        const anguloTexto = angulo > 90 && angulo < 270 ? angulo + 180 : angulo;
+        const x = Math.sin(anguloRad) * distanciaBase;
+        const y = -Math.cos(anguloRad) * distanciaBase;
 
         const etiqueta = document.createElement("div");
         etiqueta.className = "segmento-etiqueta";
         etiqueta.style.left = `calc(50% + ${x}px)`;
         etiqueta.style.top = `calc(50% + ${y}px)`;
-        etiqueta.style.transform = `translate(-50%, -50%) rotate(${anguloTexto}deg)`;
+        etiqueta.style.transform = `translate(-50%, -50%)`;
+        etiqueta.style.fontSize = `${tamanoFuente}px`;
+        etiqueta.style.maxWidth = `${anchoMaximo}px`;
         etiqueta.textContent = nombre;
 
         ruedaVisual.appendChild(etiqueta);
@@ -1090,3 +1153,219 @@ guardarEdicionAdmin.addEventListener("click", () => {
         });
 
 });
+const listaColaMusica = document.getElementById("listaColaMusica");
+
+let reproductorYT = null;
+let colaMusica = [];
+let videoActualId = null;
+
+function onYouTubeIframeAPIReady() {
+
+   reproductorYT = new YT.Player("reproductorYoutube", {
+        height: "360",
+        width: "100%",
+        videoId: "",
+        events: {
+            onStateChange: onPlayerStateChange,
+            onError: onPlayerError
+        }
+    });
+
+}
+
+function onPlayerStateChange(event) {
+
+    if (event.data === YT.PlayerState.ENDED) {
+        siguienteCancion();
+    }
+
+}
+
+function onPlayerError(event) {
+
+    console.log("Error al reproducir video, saltando a la siguiente canción. Código:", event.data);
+    siguienteCancion();
+
+}
+
+function renderColaMusica() {
+
+    listaColaMusica.innerHTML = "";
+
+    colaMusica.forEach((cancion, index) => {
+        listaColaMusica.innerHTML += `
+        <li class="cancion-item">
+            <span class="cancion-numero">#${index + 1}</span>
+            <img src="https://img.youtube.com/vi/${cancion.videoId}/mqdefault.jpg" class="cancion-miniatura">
+            <div class="cancion-info">
+                <span class="cancion-titulo">${escaparHtml(cancion.titulo)}</span>
+                <span class="cancion-pedido">Pedido por ${escaparHtml(cancion.pedidoPor)}</span>
+            </div>
+        </li>
+    `;
+    });
+
+}
+
+function cargarColaMusica() {
+
+    fetch("/api/musica/cola")
+        .then(response => response.json())
+        .then(data => {
+
+            colaMusica = data;
+            renderColaMusica();
+
+            if (!videoActualId && colaMusica.length > 0 && reproductorYT && reproductorYT.loadVideoById) {
+                reproducirPrimeraCancion();
+            }
+
+        });
+
+}
+
+function reproducirPrimeraCancion() {
+
+    if (colaMusica.length === 0) return;
+
+    const primera = colaMusica[0];
+    videoActualId = primera._id;
+
+    reproductorYT.loadVideoById(primera.videoId);
+
+}
+
+function siguienteCancion() {
+
+    if (!videoActualId) return;
+
+    fetch(`/api/musica/cola/${videoActualId}`, {
+        method: "DELETE"
+    })
+        .then(response => response.json())
+        .then(data => {
+            colaMusica = data;
+            videoActualId = null;
+            renderColaMusica();
+            reproducirPrimeraCancion();
+        });
+
+}
+
+cargarColaMusica();
+
+setInterval(cargarColaMusica, 15000);
+
+const comandoAutoSorteosInput = document.getElementById("comandoAutoSorteosInput");
+const toggleComandoAutoSorteos = document.getElementById("toggleComandoAutoSorteos");
+const guardarComandoAutoSorteos = document.getElementById("guardarComandoAutoSorteos");
+
+let comandoAutoSorteosActivo = false;
+
+function cargarComandoAutoSorteos() {
+    fetch("/api/comando-auto/sorteos")
+        .then(response => response.json())
+        .then(data => {
+            comandoAutoSorteosInput.value = data.comando || "";
+            comandoAutoSorteosActivo = data.activo || false;
+            toggleComandoAutoSorteos.textContent = comandoAutoSorteosActivo ? "Activado" : "Desactivado";
+        });
+}
+
+cargarComandoAutoSorteos();
+
+toggleComandoAutoSorteos.addEventListener("click", () => {
+    comandoAutoSorteosActivo = !comandoAutoSorteosActivo;
+    toggleComandoAutoSorteos.textContent = comandoAutoSorteosActivo ? "Activado" : "Desactivado";
+});
+
+guardarComandoAutoSorteos.addEventListener("click", () => {
+    const comando = comandoAutoSorteosInput.value.trim();
+    fetch("/api/comando-auto/sorteos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comando: comando, activo: comandoAutoSorteosActivo })
+    })
+        .then(response => response.json())
+        .then(() => alert("Comando de Sorteos guardado."));
+});
+
+const comandoAutoRuletaInput = document.getElementById("comandoAutoRuletaInput");
+const toggleComandoAutoRuleta = document.getElementById("toggleComandoAutoRuleta");
+const guardarComandoAutoRuleta = document.getElementById("guardarComandoAutoRuleta");
+
+let comandoAutoRuletaActivo = false;
+
+function cargarComandoAutoRuleta() {
+    fetch("/api/comando-auto/ruleta")
+        .then(response => response.json())
+        .then(data => {
+            comandoAutoRuletaInput.value = data.comando || "";
+            comandoAutoRuletaActivo = data.activo || false;
+            toggleComandoAutoRuleta.textContent = comandoAutoRuletaActivo ? "Activado" : "Desactivado";
+        });
+}
+
+cargarComandoAutoRuleta();
+
+toggleComandoAutoRuleta.addEventListener("click", () => {
+    comandoAutoRuletaActivo = !comandoAutoRuletaActivo;
+    toggleComandoAutoRuleta.textContent = comandoAutoRuletaActivo ? "Activado" : "Desactivado";
+});
+
+guardarComandoAutoRuleta.addEventListener("click", () => {
+    const comando = comandoAutoRuletaInput.value.trim();
+    fetch("/api/comando-auto/ruleta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comando: comando, activo: comandoAutoRuletaActivo })
+    })
+        .then(response => response.json())
+        .then(() => alert("Comando de Ruleta guardado."));
+});
+
+function revisarPendientesSorteo() {
+    fetch("/api/sorteos/pendientes")
+        .then(response => response.json())
+        .then(nombres => {
+            if (nombres.length === 0) return;
+            nombres.forEach(nombre => {
+                if (!participantes.includes(nombre)) {
+                    participantes.push(nombre);
+                }
+            });
+            renderParticipantes();
+        });
+}
+
+function revisarPendientesRuleta() {
+    fetch("/api/ruleta/pendientes")
+        .then(response => response.json())
+        .then(nombres => {
+            if (nombres.length === 0) return;
+            nombres.forEach(nombre => {
+                if (!participantesRuletaVisual.includes(nombre)) {
+                    participantesRuletaVisual.push(nombre);
+                }
+            });
+            renderListaRuletaVisual();
+        });
+}
+
+setInterval(revisarPendientesSorteo, 5000);
+setInterval(revisarPendientesRuleta, 5000);
+
+function revisarControlMusica() {
+    fetch("/api/musica/control-pendientes")
+        .then(response => response.json())
+        .then(comandos => {
+            comandos.forEach(cmd => {
+                if (!reproductorYT) return;
+                if (cmd.accion === "pausar") reproductorYT.pauseVideo();
+                if (cmd.accion === "reanudar") reproductorYT.playVideo();
+                if (cmd.accion === "skip") siguienteCancion();
+            });
+        });
+}
+
+setInterval(revisarControlMusica, 3000);

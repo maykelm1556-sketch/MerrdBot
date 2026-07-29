@@ -56,6 +56,105 @@ const sugerenciaSchema = new mongoose.Schema({
 
 const Sugerencia = mongoose.model("Sugerencia", sugerenciaSchema);
 
+const colaSchema = new mongoose.Schema({
+    videoId: String,
+    titulo: String,
+    pedidoPor: String,
+    agregado_en: { type: Date, default: Date.now }
+});
+
+const Cola = mongoose.model("Cola", colaSchema);
+
+const comandoAutoSchema = new mongoose.Schema({
+    destino: { type: String, unique: true },
+    comando: String,
+    activo: { type: Boolean, default: false }
+});
+
+const ComandoAuto = mongoose.model("ComandoAuto", comandoAutoSchema);
+
+let comandoAutoSorteos = { comando: "", activo: false };
+let comandoAutoRuleta = { comando: "", activo: false };
+
+async function cargarComandosAuto() {
+
+    const configSorteos = await ComandoAuto.findOne({ destino: "sorteos" });
+    if (configSorteos) {
+        comandoAutoSorteos = { comando: configSorteos.comando, activo: configSorteos.activo };
+    }
+
+    const configRuleta = await ComandoAuto.findOne({ destino: "ruleta" });
+    if (configRuleta) {
+        comandoAutoRuleta = { comando: configRuleta.comando, activo: configRuleta.activo };
+    }
+
+}
+
+cargarComandosAuto();
+
+app.get("/api/comando-auto/:destino", (req, res) => {
+
+    const destino = req.params.destino;
+
+    if (destino !== "sorteos" && destino !== "ruleta") {
+        res.status(400).json({ error: "Destino inválido." });
+        return;
+    }
+
+    res.json(destino === "sorteos" ? comandoAutoSorteos : comandoAutoRuleta);
+
+});
+
+app.post("/api/comando-auto/:destino", async (req, res) => {
+
+    const destino = req.params.destino;
+    const comando = (req.body.comando || "").trim().toLowerCase();
+    const activo = !!req.body.activo;
+
+    if (destino !== "sorteos" && destino !== "ruleta") {
+        res.status(400).json({ error: "Destino inválido." });
+        return;
+    }
+
+    await ComandoAuto.findOneAndUpdate(
+        { destino: destino },
+        { destino: destino, comando: comando, activo: activo },
+        { upsert: true }
+    );
+
+    if (destino === "sorteos") {
+        comandoAutoSorteos = { comando: comando, activo: activo };
+    } else {
+        comandoAutoRuleta = { comando: comando, activo: activo };
+    }
+
+    res.json({ ok: true, comando: comando, activo: activo });
+
+});
+
+let participantesPendientesSorteo = [];
+let participantesPendientesRuleta = [];
+
+app.get("/api/sorteos/pendientes", (req, res) => {
+    const pendientes = participantesPendientesSorteo;
+    participantesPendientesSorteo = [];
+    res.json(pendientes);
+});
+
+app.get("/api/ruleta/pendientes", (req, res) => {
+    const pendientes = participantesPendientesRuleta;
+    participantesPendientesRuleta = [];
+    res.json(pendientes);
+});
+
+let comandosMusicaPendientes = [];
+
+app.get("/api/musica/control-pendientes", (req, res) => {
+    const pendientes = comandosMusicaPendientes;
+    comandosMusicaPendientes = [];
+    res.json(pendientes);
+});
+
 app.post("/api/sugerencias", async (req, res) => {
 
     const texto = req.body.texto;
@@ -279,6 +378,89 @@ setInterval(verificarEnVivo, 60000);
 app.get("/api/estado-vivo", (req, res) => {
     res.json({ enVivo: canalEnVivo });
 });
+
+app.post("/api/musica/agregar", async (req, res) => {
+
+    const videoId = req.body.videoId;
+    const titulo = req.body.titulo;
+    const pedidoPor = req.body.pedidoPor || "Admin";
+
+    if (!videoId || !titulo) {
+        res.status(400).json({ error: "Falta videoId o título." });
+        return;
+    }
+
+    const nuevaCancion = new Cola({
+        videoId: videoId,
+        titulo: titulo,
+        pedidoPor: pedidoPor
+    });
+
+    await nuevaCancion.save();
+
+    const cola = await Cola.find().sort({ agregado_en: 1 });
+    res.json(cola);
+
+});
+
+app.get("/api/musica/cola", async (req, res) => {
+
+    const cola = await Cola.find().sort({ agregado_en: 1 });
+    res.json(cola);
+
+});
+
+app.delete("/api/musica/cola/:id", async (req, res) => {
+
+    const id = req.params.id;
+
+    await Cola.findByIdAndDelete(id);
+
+    const cola = await Cola.find().sort({ agregado_en: 1 });
+    res.json(cola);
+
+});
+
+app.get("/api/musica/buscar", async (req, res) => {
+
+    const q = req.query.q;
+
+    if (!q || q.trim() === "") {
+        res.status(400).json({ error: "Falta el término de búsqueda." });
+        return;
+    }
+
+  try {
+
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${encodeURIComponent(q)}&key=${process.env.YOUTUBE_API_KEY}`;
+
+        console.log("URL de YouTube que se va a consultar:", url);
+        console.log("YOUTUBE_API_KEY cargada, longitud:", process.env.YOUTUBE_API_KEY ? process.env.YOUTUBE_API_KEY.length : "undefined");
+
+        const respuesta = await fetch(url);
+        const datos = await respuesta.json();
+
+        if (datos.error) {
+            console.log("Error de YouTube API:", datos.error);
+            res.status(500).json({ error: "Error consultando YouTube." });
+            return;
+        }
+
+        const resultados = datos.items.map(item => ({
+            videoId: item.id.videoId,
+            titulo: item.snippet.title,
+            canal: item.snippet.channelTitle,
+            miniatura: item.snippet.thumbnails.default.url
+        }));
+
+        res.json(resultados);
+
+    } catch (error) {
+        console.log("Error buscando en YouTube:", error.message, "| causa:", error.cause);
+        res.status(500).json({ error: "Error interno buscando en YouTube." });
+    }
+
+});
 const PUSHER_WS_URL = "wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0-rc2&flash=false";
 
 async function renovarTokenKick(auth) {
@@ -381,20 +563,26 @@ async function conectarChatKick() {
    socket.on("message", async (mensajeCrudo) => {
 
         const mensaje = JSON.parse(mensajeCrudo);
-
-        let usuario = null;
+let usuario = null;
         let texto = null;
+        let esMod = false;
 
         if (mensaje.event === "App\\Events\\ChatMessageSentEvent") {
             const contenido = JSON.parse(mensaje.data);
             usuario = contenido.user.username;
             texto = contenido.message.message;
+            const badges = (contenido.user.identity && contenido.user.identity.badges) || [];
+            esMod = badges.some(b => b.type === "moderator" || b.type === "broadcaster");
+            console.log("Badges de", usuario, ":", badges, "| esMod:", esMod);
         }
 
         if (mensaje.event === "App\\Events\\ChatMessageEvent") {
             const contenido = JSON.parse(mensaje.data);
             usuario = contenido.sender.username;
             texto = contenido.content;
+            const badges = (contenido.sender.identity && contenido.sender.identity.badges) || [];
+            esMod = badges.some(b => b.type === "moderator" || b.type === "broadcaster");
+            console.log("Badges de", usuario, ":", badges, "| esMod:", esMod);
         }
 
         if (usuario && texto) {
@@ -427,7 +615,7 @@ async function conectarChatKick() {
                         await enviarMensajeChat(`@${usuario} estás en el nivel ${datosUsuario.nivel}`);
                     }
 
-                    if (comando === "!watchtime") {
+               if (comando === "!watchtime") {
                         const dias = Math.floor(datosUsuario.watchtime / 1440);
                         const horas = Math.floor((datosUsuario.watchtime % 1440) / 60);
                         const minutos = datosUsuario.watchtime % 60;
@@ -435,6 +623,87 @@ async function conectarChatKick() {
                     }
 
                 }
+            }
+
+            if (comando.startsWith("!mr ")) {
+
+                const nombreCancion = texto.trim().slice(4).trim();
+
+                if (!nombreCancion) {
+                    await enviarMensajeChat(`@${usuario} escribe el nombre de la canción después de !mr`);
+                } else {
+
+                    try {
+
+                        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(nombreCancion)}&key=${process.env.YOUTUBE_API_KEY}`;
+
+                        const respuesta = await fetch(url);
+                        const datos = await respuesta.json();
+
+                        if (datos.error || !datos.items || datos.items.length === 0) {
+                            await enviarMensajeChat(`@${usuario} no encontré esa canción en YouTube.`);
+                        } else {
+
+                            const resultado = datos.items[0];
+
+                            const nuevaCancion = new Cola({
+                                videoId: resultado.id.videoId,
+                                titulo: resultado.snippet.title,
+                                pedidoPor: usuario
+                            });
+
+                            await nuevaCancion.save();
+
+                            await enviarMensajeChat(`@${usuario} agregada a la cola: ${resultado.snippet.title}`);
+
+                        }
+
+                 } catch (error) {
+                        console.log("Error en comando !mr:", error.message);
+                        await enviarMensajeChat(`@${usuario} hubo un error buscando la canción.`);
+                    }
+
+                }
+
+            }
+
+            if (comandoAutoSorteos.activo && comandoAutoSorteos.comando && comando === comandoAutoSorteos.comando) {
+                participantesPendientesSorteo.push(usuario);
+            }
+
+            if (comandoAutoRuleta.activo && comandoAutoRuleta.comando && comando === comandoAutoRuleta.comando) {
+                participantesPendientesRuleta.push(usuario);
+            }
+
+            if (esMod) {
+
+                if (comando === "!mpausar") {
+                    comandosMusicaPendientes.push({ accion: "pausar" });
+                    await enviarMensajeChat(`@${usuario} música pausada.`);
+                }
+
+                if (comando === "!mreanudar") {
+                    comandosMusicaPendientes.push({ accion: "reanudar" });
+                    await enviarMensajeChat(`@${usuario} música reanudada.`);
+                }
+
+                if (comando === "!mskippear") {
+                    comandosMusicaPendientes.push({ accion: "skip" });
+                    await enviarMensajeChat(`@${usuario} canción saltada.`);
+                }
+
+                if (comando === "!mactual") {
+
+                    const actual = await Cola.findOne().sort({ agregado_en: 1 });
+
+                    if (!actual) {
+                        await enviarMensajeChat(`@${usuario} no hay ninguna canción sonando ahorita.`);
+                    } else {
+                        await enviarMensajeChat(`@${usuario} suena "${actual.titulo}", pedida por ${actual.pedidoPor}.`);
+                    }
+
+                }
+
             }
         }
     });

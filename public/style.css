@@ -99,6 +99,7 @@ header h2 {
     display: flex;
     margin-bottom: 20px;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .tab {
@@ -122,8 +123,9 @@ header h2 {
     font-weight: bold;
 }
 .tab {
-    min-width: 160px;
+    min-width: 140px;
     text-align: center;
+    flex: 1 1 auto;
 }
 .tab-panel {
     display: none;
@@ -1098,4 +1100,188 @@ label[for="duracionGiroVisual"] {
     cursor: pointer;
     font-size: 14px;
     margin-left: 8px;
+}
+#reproductorYoutube {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+#listaColaMusica {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.cancion-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+}
+
+.cancion-numero {
+    color: #ffcc00;
+    font-weight: bold;
+    min-width: 24px;
+}
+
+.cancion-miniatura {
+    width: 80px;
+    height: 45px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.cancion-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.cancion-titulo {
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cancion-pedido {
+    color: #999999;
+    font-size: 12px;
+}
+#menuAdminContenedor {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 500;
+}
+
+#btnAdminCorona {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#btnAdminCorona:hover {
+    background-color: #2a2a2a;
+}
+
+#dropdownAdmin {
+    position: absolute;
+    top: 58px;
+    right: 0;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    width: 320px;
+    max-height: 70vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+.menu-sincronizar {
+    position: relative;
+    display: inline-block;
+}
+
+#btnSincronizarSorteos,
+#btnSincronizarRuleta {
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#btnSincronizarSorteos:hover,
+#btnSincronizarRuleta:hover {
+    background-color: #2ecc10;
+}
+
+#dropdownSincronizarSorteos,
+#dropdownSincronizarRuleta {
+    position: absolute;
+    top: 48px;
+    left: 0;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 50;
+    min-width: 180px;
+}
+
+#dropdownSincronizarSorteos button,
+#dropdownSincronizarRuleta button {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+}
+
+#dropdownSincronizarSorteos button:hover,
+#dropdownSincronizarRuleta button:hover {
+    background-color: #333;
+}
+#comandoAutoSorteosInput,
+#comandoAutoRuletaInput {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: #ffffff;
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+#comandoAutoSorteosInput:focus,
+#comandoAutoRuletaInput:focus {
+    outline: none;
+    border-color: #39ff14;
+}
+
+#toggleComandoAutoSorteos,
+#guardarComandoAutoSorteos,
+#toggleComandoAutoRuleta,
+#guardarComandoAutoRuleta {
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 8px;
+    transition: background-color 0.2s ease;
+}
+
+#toggleComandoAutoSorteos:hover,
+#guardarComandoAutoSorteos:hover,
+#toggleComandoAutoRuleta:hover,
+#guardarComandoAutoRuleta:hover {
+    background-color: #2ecc10;
 }
