@@ -1287,13 +1287,36 @@ toggleComandoAutoSorteos.addEventListener("click", () => {
 
 guardarComandoAutoSorteos.addEventListener("click", () => {
     const comando = comandoAutoSorteosInput.value.trim();
+    console.log("ENVIANDO a comando-auto/sorteos:", { comando: comando, activo: comandoAutoSorteosActivo });
     fetch("/api/comando-auto/sorteos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ comando: comando, activo: comandoAutoSorteosActivo })
     })
         .then(response => response.json())
-        .then(() => alert("Comando de Sorteos guardado."));
+        .then((data) => {
+            console.log("RESPUESTA de comando-auto/sorteos:", data);
+            alert("Comando de Sorteos guardado.");
+        });
+});
+
+const quitarComandoAutoSorteos = document.getElementById("quitarComandoAutoSorteos");
+
+quitarComandoAutoSorteos.addEventListener("click", () => {
+
+    fetch("/api/comando-auto/sorteos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comando: "", activo: false })
+    })
+        .then(response => response.json())
+        .then(() => {
+            comandoAutoSorteosInput.value = "";
+            comandoAutoSorteosActivo = false;
+            pintarToggleSorteos();
+            alert("Comando de Sorteos eliminado y desactivado.");
+        });
+
 });
 
 const comandoAutoRuletaInput = document.getElementById("comandoAutoRuletaInput");
@@ -1334,6 +1357,25 @@ guardarComandoAutoRuleta.addEventListener("click", () => {
     })
         .then(response => response.json())
         .then(() => alert("Comando de Ruleta guardado."));
+});
+
+const quitarComandoAutoRuleta = document.getElementById("quitarComandoAutoRuleta");
+
+quitarComandoAutoRuleta.addEventListener("click", () => {
+
+    fetch("/api/comando-auto/ruleta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comando: "", activo: false })
+    })
+        .then(response => response.json())
+        .then(() => {
+            comandoAutoRuletaInput.value = "";
+            comandoAutoRuletaActivo = false;
+            pintarToggleRuleta();
+            alert("Comando de Ruleta eliminado y desactivado.");
+        });
+
 });
 
 function revisarPendientesSorteo() {
