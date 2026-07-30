@@ -1262,13 +1262,19 @@ const guardarComandoAutoSorteos = document.getElementById("guardarComandoAutoSor
 
 let comandoAutoSorteosActivo = false;
 
+function pintarToggleSorteos() {
+    toggleComandoAutoSorteos.textContent = comandoAutoSorteosActivo ? "Activado" : "Desactivado";
+    toggleComandoAutoSorteos.style.backgroundColor = comandoAutoSorteosActivo ? "#39ff14" : "#ff3b3b";
+    toggleComandoAutoSorteos.style.color = comandoAutoSorteosActivo ? "#0a0a0a" : "#ffffff";
+}
+
 function cargarComandoAutoSorteos() {
     fetch("/api/comando-auto/sorteos")
         .then(response => response.json())
         .then(data => {
             comandoAutoSorteosInput.value = data.comando || "";
             comandoAutoSorteosActivo = data.activo || false;
-            toggleComandoAutoSorteos.textContent = comandoAutoSorteosActivo ? "Activado" : "Desactivado";
+            pintarToggleSorteos();
         });
 }
 
@@ -1276,7 +1282,7 @@ cargarComandoAutoSorteos();
 
 toggleComandoAutoSorteos.addEventListener("click", () => {
     comandoAutoSorteosActivo = !comandoAutoSorteosActivo;
-    toggleComandoAutoSorteos.textContent = comandoAutoSorteosActivo ? "Activado" : "Desactivado";
+    pintarToggleSorteos();
 });
 
 guardarComandoAutoSorteos.addEventListener("click", () => {
@@ -1296,13 +1302,19 @@ const guardarComandoAutoRuleta = document.getElementById("guardarComandoAutoRule
 
 let comandoAutoRuletaActivo = false;
 
+function pintarToggleRuleta() {
+    toggleComandoAutoRuleta.textContent = comandoAutoRuletaActivo ? "Activado" : "Desactivado";
+    toggleComandoAutoRuleta.style.backgroundColor = comandoAutoRuletaActivo ? "#39ff14" : "#ff3b3b";
+    toggleComandoAutoRuleta.style.color = comandoAutoRuletaActivo ? "#0a0a0a" : "#ffffff";
+}
+
 function cargarComandoAutoRuleta() {
     fetch("/api/comando-auto/ruleta")
         .then(response => response.json())
         .then(data => {
             comandoAutoRuletaInput.value = data.comando || "";
             comandoAutoRuletaActivo = data.activo || false;
-            toggleComandoAutoRuleta.textContent = comandoAutoRuletaActivo ? "Activado" : "Desactivado";
+            pintarToggleRuleta();
         });
 }
 
@@ -1310,7 +1322,7 @@ cargarComandoAutoRuleta();
 
 toggleComandoAutoRuleta.addEventListener("click", () => {
     comandoAutoRuletaActivo = !comandoAutoRuletaActivo;
-    toggleComandoAutoRuleta.textContent = comandoAutoRuletaActivo ? "Activado" : "Desactivado";
+    pintarToggleRuleta();
 });
 
 guardarComandoAutoRuleta.addEventListener("click", () => {

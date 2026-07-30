@@ -696,10 +696,15 @@ let usuario = null;
 
                     try {
 
-                        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(nombreCancion)}&key=${process.env.YOUTUBE_API_KEY}`;
+                  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(nombreCancion)}&key=${process.env.YOUTUBE_API_KEY}`;
 
                         const respuesta = await fetch(url);
+
+                        console.log("DIAGNOSTICO_MR_STATUS:", respuesta.status);
+
                         const datos = await respuesta.json();
+
+                        console.log("DIAGNOSTICO_MR_DATOS:", JSON.stringify(datos));
 
                         if (datos.error || !datos.items || datos.items.length === 0) {
                             await enviarMensajeChat(`@${usuario} no encontré esa canción en YouTube.`);
@@ -728,12 +733,16 @@ let usuario = null;
 
             }
 
+            console.log("Comparando comando:", JSON.stringify(comando), "| config Sorteos:", JSON.stringify(comandoAutoSorteos), "| config Ruleta:", JSON.stringify(comandoAutoRuleta));
+
             if (comandoAutoSorteos.activo && comandoAutoSorteos.comando && comando === comandoAutoSorteos.comando) {
                 participantesPendientesSorteo.push(usuario);
+                console.log("✅ Agregado a pendientes de Sorteos:", usuario);
             }
 
             if (comandoAutoRuleta.activo && comandoAutoRuleta.comando && comando === comandoAutoRuleta.comando) {
                 participantesPendientesRuleta.push(usuario);
+                console.log("✅ Agregado a pendientes de Ruleta:", usuario);
             }
 
             if (esMod) {
