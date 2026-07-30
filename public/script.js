@@ -104,6 +104,13 @@ function cargarEconomia() {
 
 cargarEconomia();
 
+const socket = io();
+
+socket.on("economia-actualizada", (data) => {
+    economia = data;
+    renderEconomia();
+});
+
 guardarUsuario.addEventListener("click", () => {
 
     if (!adminAutenticado) {
@@ -1166,11 +1173,16 @@ function onYouTubeIframeAPIReady() {
         width: "100%",
         videoId: "",
         events: {
+            onReady: onPlayerReady,
             onStateChange: onPlayerStateChange,
             onError: onPlayerError
         }
     });
 
+}
+
+function onPlayerReady(event) {
+    event.target.mute();
 }
 
 function onPlayerStateChange(event) {
@@ -1185,6 +1197,27 @@ function onPlayerError(event) {
 
     console.log("Error al reproducir video, saltando a la siguiente canción. Código:", event.data);
     siguienteCancion();
+
+}
+
+const coverMusica = document.getElementById("coverMusica");
+const coverMusicaTitulo = document.getElementById("coverMusicaTitulo");
+const coverMusicaPedido = document.getElementById("coverMusicaPedido");
+
+function actualizarCoverMusica() {
+
+    if (colaMusica.length === 0) {
+        coverMusica.style.backgroundImage = "";
+        coverMusicaTitulo.textContent = "Sin canciones en la cola";
+        coverMusicaPedido.textContent = "";
+        return;
+    }
+
+    const actual = colaMusica[0];
+
+    coverMusica.style.backgroundImage = `url(https://img.youtube.com/vi/${actual.videoId}/hqdefault.jpg)`;
+    coverMusicaTitulo.textContent = actual.titulo;
+    coverMusicaPedido.textContent = "Pedido por " + actual.pedidoPor;
 
 }
 
@@ -1204,6 +1237,8 @@ function renderColaMusica() {
         </li>
     `;
     });
+
+    actualizarCoverMusica();
 
 }
 
@@ -1255,6 +1290,18 @@ function siguienteCancion() {
 cargarColaMusica();
 
 setInterval(cargarColaMusica, 15000);
+
+const botonActivarSonido = document.getElementById("botonActivarSonido");
+
+if (botonActivarSonido) {
+    botonActivarSonido.addEventListener("click", () => {
+        if (reproductorYT && reproductorYT.unMute) {
+            reproductorYT.unMute();
+            reproductorYT.playVideo();
+        }
+        botonActivarSonido.style.display = "none";
+    });
+}
 
 const comandoAutoSorteosInput = document.getElementById("comandoAutoSorteosInput");
 const toggleComandoAutoSorteos = document.getElementById("toggleComandoAutoSorteos");

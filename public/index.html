@@ -209,7 +209,7 @@
                     <input type="text" id="comandoAutoSorteosInput" placeholder="Ej: !entrar">
                     <button id="toggleComandoAutoSorteos">Desactivado</button>
                     <button id="guardarComandoAutoSorteos">Guardar</button>
-                    <button id="quitarComandoAutoSorteos" style="background-color:#ff3b3b; color:#fff;">🗑️ Quitar comando</button>
+                   <button id="quitarComandoAutoSorteos" class="eliminarUsuario">🗑️ Quitar comando</button>
                 </div>
 
                 <ul id="listaParticipantes"></ul>
@@ -254,7 +254,7 @@
                     <input type="text" id="comandoAutoRuletaInput" placeholder="Ej: !ruleta">
                     <button id="toggleComandoAutoRuleta">Desactivado</button>
                     <button id="guardarComandoAutoRuleta">Guardar</button>
-                    <button id="quitarComandoAutoRuleta" style="background-color:#ff3b3b; color:#fff;">🗑️ Quitar comando</button>
+                   <button id="quitarComandoAutoRuleta" class="eliminarUsuario">🗑️ Quitar comando</button>
                 </div>
 
             <ul id="listaRuletaVisual"></ul>
@@ -282,12 +282,19 @@
 
             <!-- MÚSICA -->
 
-            <div class="tab-panel" id="musica">
+      <div class="tab-panel" id="musica">
 
                 <h2>Música</h2>
 
                 <div id="reproductorYoutubeContenedor">
                     <div id="reproductorYoutube"></div>
+                   <div id="coverMusica">
+                        <div id="coverMusicaTexto">
+                            <p id="coverMusicaTitulo">Sin canciones en la cola</p>
+                            <p id="coverMusicaPedido"></p>
+                            <button id="botonActivarSonido">🔊 Activar sonido</button>
+                        </div>
+                    </div>
                 </div>
 
                 <h3>Cola de reproducción</h3>
@@ -390,6 +397,7 @@
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
 
 </body>

@@ -1285,3 +1285,98 @@ label[for="duracionGiroVisual"] {
 #guardarComandoAutoRuleta:hover {
     background-color: #2ecc10;
 }
+#reproductorYoutubeContenedor {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+#reproductorYoutube {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    margin-bottom: 0;
+}
+
+#coverMusica {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-color: #0a0a0a;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 5;
+    cursor: default;
+}
+
+#coverMusica::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.1) 65%);
+}
+
+#coverMusicaTexto {
+    position: relative;
+    padding: 20px;
+    text-align: center;
+    z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#coverMusicaTitulo {
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 18px;
+    margin: 0 0 6px 0;
+}
+
+#coverMusicaPedido {
+    color: #39ff14;
+    font-size: 14px;
+    margin: 0;
+}
+#botonActivarSonido {
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 13px;
+    margin-top: 10px;
+}
+
+#botonActivarSonido:hover {
+    background-color: #2ecc10;
+}
+.eliminarUsuario {
+    background-color: #ff3b3b;
+    color: #ffffff;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.eliminarUsuario:hover {
+    background-color: #e02e2e;
+}

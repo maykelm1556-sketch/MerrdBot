@@ -3,7 +3,13 @@ const WebSocket = require("ws");
 const crypto = require("crypto");
 require("dotenv").config();
 const mongoose = require("mongoose");
+const http = require("http");
+const { Server } = require("socket.io");
+
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
 app.use(express.static("public"));
 app.use(express.json());
 
@@ -946,6 +952,7 @@ app.post("/api/economia", async (req, res) => {
     await nuevoUsuario.save();
 
     const economia = await Usuario.find();
+    io.emit("economia-actualizada", economia);
     res.json(economia);
 
 });
@@ -963,12 +970,13 @@ app.patch("/api/economia/:id", async (req, res) => {
         return;
     }
 
-    usuario.usuario = nuevoNombre;
+  usuario.usuario = nuevoNombre;
     usuario.puntos = nuevosPuntos;
 
     await usuario.save();
 
     const economia = await Usuario.find();
+    io.emit("economia-actualizada", economia);
     res.json(economia);
 
 });
@@ -980,6 +988,7 @@ app.delete("/api/economia/:id", async (req, res) => {
     await Usuario.findByIdAndDelete(id);
 
     const economia = await Usuario.find();
+    io.emit("economia-actualizada", economia);
     res.json(economia);
 
 });
@@ -990,6 +999,18 @@ app.delete("/api/economia/:nombre", async (req, res) => {
     await Usuario.deleteOne({ usuario: nombre });
 
     const economia = await Usuario.find();
+    io.emit("economia-actualizada", economia);
+    res.json(economia);
+
+});
+app.delete("/api/economia/:nombre", async (req, res) => {
+
+    const nombre = req.params.nombre;
+
+    await Usuario.deleteOne({ usuario: nombre });
+
+    const economia = await Usuario.find();
+    io.emit("economia-actualizada", economia);
     res.json(economia);
 
 });
@@ -1017,6 +1038,6 @@ app.delete("/api/admins/:id", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Servidor iniciado en el puerto ${PORT}`);
 });
