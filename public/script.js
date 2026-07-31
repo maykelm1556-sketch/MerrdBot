@@ -1540,3 +1540,37 @@ function revisarControlMusica() {
 }
 
 setInterval(revisarControlMusica, 3000);
+const puntosPorMinutoInput = document.getElementById("puntosPorMinutoInput");
+const xpPorMinutoInput = document.getElementById("xpPorMinutoInput");
+const guardarConfigWatchtime = document.getElementById("guardarConfigWatchtime");
+
+function cargarConfigWatchtime() {
+    fetch("/api/config-watchtime")
+        .then(response => response.json())
+        .then(data => {
+            puntosPorMinutoInput.value = data.puntosPorMinuto;
+            xpPorMinutoInput.value = data.xpPorMinuto;
+        });
+}
+
+cargarConfigWatchtime();
+
+guardarConfigWatchtime.addEventListener("click", () => {
+
+    const puntosPorMinuto = parseInt(puntosPorMinutoInput.value);
+    const xpPorMinuto = parseInt(xpPorMinutoInput.value);
+
+    if (isNaN(puntosPorMinuto) || isNaN(xpPorMinuto)) {
+        alert("Escribe números válidos.");
+        return;
+    }
+
+    fetch("/api/config-watchtime", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ puntosPorMinuto: puntosPorMinuto, xpPorMinuto: xpPorMinuto })
+    })
+        .then(response => response.json())
+        .then(() => alert("Configuración guardada."));
+
+});

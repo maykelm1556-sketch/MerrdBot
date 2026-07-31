@@ -1448,3 +1448,47 @@ label[for="duracionGiroVisual"] {
 .eliminarUsuario:hover {
     background-color: #e02e2e;
 }
+#configWatchtimeForm {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+#configWatchtimeForm label {
+    color: #ffffff;
+    font-size: 13px;
+}
+
+#puntosPorMinutoInput,
+#xpPorMinutoInput {
+    background-color: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #ffffff;
+    font-size: 14px;
+    width: 100px;
+}
+
+#puntosPorMinutoInput:focus,
+#xpPorMinutoInput:focus {
+    outline: none;
+    border-color: #39ff14;
+}
+
+#guardarConfigWatchtime {
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 13px;
+    width: fit-content;
+}
+
+#guardarConfigWatchtime:hover {
+    background-color: #2ecc10;
+}
