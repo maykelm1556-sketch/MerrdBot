@@ -7,13 +7,14 @@ dns.setServers(["8.8.8.8", "8.8.4.4"]);
 const mongoose = require("mongoose");
 const http = require("http");
 const { Server } = require("socket.io");
-
+const cookieParser = require("cookie-parser");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
 app.use(express.static("public"));
 app.use(express.json());
+app.use(cookieParser(process.env.COOKIE_SECRET));
 mongoose.set("bufferTimeoutMS", 30000);
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("Conectado a MongoDB ✅"))
@@ -281,8 +282,179 @@ app.get("/auth/kick", (req, res) => {
         state: "merrdbot"
     });
 
+res.redirect(`https://id.kick.com/oauth/authorize?${parametros.toString()}`);
+
+});
+
+app.get("/auth/kick/viewer", (req, res) => {
+
+    const codeVerifier = generarCodeVerifier();
+    const codeChallenge = generarCodeChallenge(codeVerifier);
+    const state = crypto.randomBytes(16).toString("hex");
+
+    res.cookie("kick_viewer_verifier", codeVerifier, {
+        httpOnly: true,
+        maxAge: 5 * 60 * 1000,
+        sameSite: "lax"
+    });
+
+    res.cookie("kick_viewer_state", state, {
+        httpOnly: true,
+        maxAge: 5 * 60 * 1000,
+        sameSite: "lax"
+    });
+
+    const parametros = new URLSearchParams({
+        response_type: "code",
+        client_id: process.env.KICK_CLIENT_ID,
+        redirect_uri: process.env.KICK_VIEWER_REDIRECT_URI,
+        scope: "user:read",
+        code_challenge: codeChallenge,
+        code_challenge_method: "S256",
+        state: state
+    });
+
     res.redirect(`https://id.kick.com/oauth/authorize?${parametros.toString()}`);
 
+});
+
+app.get("/auth/kick/viewer/callback", async (req, res) => {
+
+    const code = req.query.code;
+    const stateRecibido = req.query.state;
+
+    const verifierGuardado = req.cookies.kick_viewer_verifier;
+    const stateGuardado = req.cookies.kick_viewer_state;
+
+    res.clearCookie("kick_viewer_verifier");
+    res.clearCookie("kick_viewer_state");
+
+    if (!code || !verifierGuardado || !stateGuardado || stateRecibido !== stateGuardado) {
+        console.log("Fallo validación viewer OAuth. code:", !!code, "| verifier:", !!verifierGuardado, "| state coincide:", stateRecibido === stateGuardado);
+        res.redirect("/?viewer_error=1");
+        return;
+    }
+
+    try {
+
+        const respuestaToken = await fetch("https://id.kick.com/oauth/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+                grant_type: "authorization_code",
+                client_id: process.env.KICK_CLIENT_ID.trim(),
+                client_secret: process.env.KICK_CLIENT_SECRET.trim(),
+                redirect_uri: process.env.KICK_VIEWER_REDIRECT_URI.trim(),
+                code_verifier: verifierGuardado,
+                code: code
+            })
+        });
+
+        const datosToken = await respuestaToken.json();
+
+        console.log("Respuesta de token para viewer:", datosToken);
+
+        if (!datosToken.access_token) {
+            res.redirect("/?viewer_error=1");
+            return;
+        }
+
+        const respuestaUser = await fetch("https://api.kick.com/public/v1/users", {
+            headers: { "Authorization": `Bearer ${datosToken.access_token}` }
+        });
+
+      const datosUser = await respuestaUser.json();
+
+        const infoUsuario = datosUser.data && datosUser.data[0];
+
+        if (!infoUsuario || !infoUsuario.name) {
+            console.log("No se pudo obtener el username del viewer:", datosUser);
+            res.redirect("/?viewer_error=1");
+            return;
+        }
+
+        res.cookie("viewer_session", infoUsuario.name, {
+            httpOnly: true,
+            signed: true,
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+            sameSite: "lax"
+        });
+
+        res.redirect("/");
+
+    } catch (error) {
+        console.log("Error en callback del viewer:", error.message);
+        res.redirect("/?viewer_error=1");
+    }
+
+});
+
+app.get("/auth/kick/viewer", (req, res) => {
+
+    const codeVerifier = generarCodeVerifier();
+    const codeChallenge = generarCodeChallenge(codeVerifier);
+    const state = crypto.randomBytes(16).toString("hex");
+
+    res.cookie("kick_viewer_verifier", codeVerifier, {
+        httpOnly: true,
+        maxAge: 5 * 60 * 1000,
+        sameSite: "lax"
+    });
+
+    res.cookie("kick_viewer_state", state, {
+        httpOnly: true,
+        maxAge: 5 * 60 * 1000,
+        sameSite: "lax"
+    });
+
+    const parametros = new URLSearchParams({
+        response_type: "code",
+        client_id: process.env.KICK_CLIENT_ID,
+        redirect_uri: process.env.KICK_VIEWER_REDIRECT_URI,
+        scope: "user:read",
+        code_challenge: codeChallenge,
+        code_challenge_method: "S256",
+        state: state
+    });
+
+    res.redirect(`https://id.kick.com/oauth/authorize?${parametros.toString()}`);
+
+});
+
+app.get("/api/viewer/me", async (req, res) => {
+
+    const username = req.signedCookies.viewer_session;
+
+    if (!username) {
+        res.status(401).json({ error: "No hay sesión de viewer activa." });
+        return;
+    }
+
+    const datos = await Comunidad.findOne({ usuario: { $regex: `^${username}$`, $options: "i" } });
+
+    if (!datos) {
+        res.json({
+            usuario: username,
+            puntos: 0,
+            nivel: 1,
+            watchtime: 0,
+            sinDatos: true
+        });
+        return;
+    }
+
+    res.json({
+        usuario: datos.usuario,
+        puntos: datos.puntos,
+        nivel: datos.nivel,
+        watchtime: datos.watchtime
+    });
+
+});
+
+app.post("/auth/kick/viewer/logout", (req, res) => {
+    res.clearCookie("viewer_session");
+    res.json({ ok: true });
 });
 
 app.get("/auth/kick/callback", async (req, res) => {
@@ -770,7 +942,7 @@ let usuario = null;
                     await enviarMensajeChat(`@${usuario} canción saltada.`);
                 }
 
-                if (comando === "!mactual") {
+              if (comando === "!mactual") {
 
                     const actual = await Cola.findOne().sort({ agregado_en: 1 });
 
@@ -778,6 +950,20 @@ let usuario = null;
                         await enviarMensajeChat(`@${usuario} no hay ninguna canción sonando ahorita.`);
                     } else {
                         await enviarMensajeChat(`@${usuario} suena "${actual.titulo}", pedida por ${actual.pedidoPor}.`);
+                    }
+
+                }
+
+              if (comando.startsWith("!mvolumen")) {
+
+                    const partes = comando.split(" ");
+                    const valor = parseInt(partes[1]);
+
+                    if (isNaN(valor) || valor < 0 || valor > 100) {
+                        await enviarMensajeChat(`@${usuario} escribe un número entre 0 y 100. Ejemplo: !mvolumen 50`);
+                    } else {
+                        comandosMusicaPendientes.push({ accion: "volumen", valor: valor });
+                        await enviarMensajeChat(`@${usuario} volumen ajustado a ${valor}.`);
                     }
 
                 }

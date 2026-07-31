@@ -56,16 +56,34 @@
 
     <div class="banner-streamer">
 
-        <img src="foto-streamer.png.png" alt="Foto del streamer" class="banner-foto">
+    <img src="foto-streamer.png.png" alt="Foto del streamer" class="banner-foto">
 
-        <div class="banner-info">
-            <h1 class="banner-nombre">ElOviedo</h1>
-            <div class="banner-estado">
-                <span class="punto-en-vivo"></span> EN VIVO
-            </div>
+    <div class="banner-info">
+        <h1 class="banner-nombre">ElOviedo</h1>
+        <div class="banner-estado">
+            <span class="punto-en-vivo"></span> EN VIVO
+        </div>
+    </div>
+
+    <div id="viewerBox">
+
+        <div id="viewerLogin">
+            <a href="/auth/kick/viewer" id="btnViewerLogin">
+                Iniciar sesión con Kick
+            </a>
+        </div>
+
+        <div id="viewerPanel" style="display:none;">
+            <p id="viewerNombre"></p>
+            <p class="viewer-stat">Puntos: <span id="viewerPuntos"></span></p>
+            <p class="viewer-stat">Nivel: <span id="viewerNivel"></span></p>
+            <p class="viewer-stat">Watchtime: <span id="viewerWatchtime"></span></p>
+            <button id="btnViewerLogout">Log out</button>
         </div>
 
     </div>
+
+</div>
 
     <div class="card">
 

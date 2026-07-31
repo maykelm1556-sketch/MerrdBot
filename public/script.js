@@ -4,6 +4,67 @@ function escaparHtml(texto) {
     return div.innerHTML;
 }
 
+const viewerLogin = document.getElementById("viewerLogin");
+const viewerPanel = document.getElementById("viewerPanel");
+const viewerNombre = document.getElementById("viewerNombre");
+const viewerPuntos = document.getElementById("viewerPuntos");
+const viewerNivel = document.getElementById("viewerNivel");
+const viewerWatchtime = document.getElementById("viewerWatchtime");
+const btnViewerLogout = document.getElementById("btnViewerLogout");
+
+function formatearWatchtimeViewer(minutos) {
+
+    const dias = Math.floor(minutos / 1440);
+    const horas = Math.floor((minutos % 1440) / 60);
+    const mins = minutos % 60;
+
+    let texto = "";
+    if (dias > 0) texto += dias + "d ";
+    if (horas > 0) texto += horas + "h ";
+    texto += mins + "min";
+
+    return texto;
+}
+
+function cargarViewer() {
+
+    fetch("/api/viewer/me")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("No hay sesión");
+            }
+            return response.json();
+        })
+        .then(data => {
+
+            viewerNombre.textContent = data.usuario;
+            viewerPuntos.textContent = data.puntos.toLocaleString("es-ES");
+            viewerNivel.textContent = data.nivel;
+            viewerWatchtime.textContent = formatearWatchtimeViewer(data.watchtime);
+
+            viewerLogin.style.display = "none";
+            viewerPanel.style.display = "block";
+
+        })
+        .catch(() => {
+            viewerLogin.style.display = "block";
+            viewerPanel.style.display = "none";
+        });
+
+}
+
+cargarViewer();
+
+btnViewerLogout.addEventListener("click", () => {
+
+    fetch("/auth/kick/viewer/logout", { method: "POST" })
+        .then(() => {
+            viewerLogin.style.display = "block";
+            viewerPanel.style.display = "none";
+        });
+
+});
+
 const tabs = document.querySelectorAll(".tab");
 const panels = document.querySelectorAll(".tab-panel");
 
@@ -1462,9 +1523,18 @@ function revisarControlMusica() {
         .then(comandos => {
             comandos.forEach(cmd => {
                 if (!reproductorYT) return;
-                if (cmd.accion === "pausar") reproductorYT.pauseVideo();
+              if (cmd.accion === "pausar") reproductorYT.pauseVideo();
                 if (cmd.accion === "reanudar") reproductorYT.playVideo();
                 if (cmd.accion === "skip") siguienteCancion();
+                if (cmd.accion === "volumen") reproductorYT.setVolume(cmd.valor);
+                if (cmd.accion === "subirvolumen") {
+                    const nuevoVolumen = Math.min(reproductorYT.getVolume() + 10, 100);
+                    reproductorYT.setVolume(nuevoVolumen);
+                }
+                if (cmd.accion === "bajarvolumen") {
+                    const nuevoVolumen = Math.max(reproductorYT.getVolume() - 10, 0);
+                    reproductorYT.setVolume(nuevoVolumen);
+                }
             });
         });
 }
