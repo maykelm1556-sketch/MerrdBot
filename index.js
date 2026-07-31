@@ -320,6 +320,8 @@ app.get("/auth/kick/viewer", (req, res) => {
 
 app.get("/auth/kick/viewer/callback", async (req, res) => {
 
+  console.log("Query completa recibida en callback viewer:", JSON.stringify(req.query));
+
     const code = req.query.code;
     const stateRecibido = req.query.state;
 
