@@ -2,6 +2,8 @@ const express = require("express");
 const WebSocket = require("ws");
 const crypto = require("crypto");
 require("dotenv").config();
+const dns = require("dns");
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 const mongoose = require("mongoose");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -12,7 +14,7 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 app.use(express.json());
-
+mongoose.set("bufferTimeoutMS", 30000);
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("Conectado a MongoDB ✅"))
     .catch((error) => console.error("Error al conectar a MongoDB ❌", error));
