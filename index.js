@@ -914,7 +914,14 @@ app.post("/api/admin/login", async (req, res) => {
     const usuario = req.body.usuario;
     const password = req.body.password;
 
+    console.log("Intento de login - usuario recibido:", JSON.stringify(usuario), "| password recibido:", JSON.stringify(password));
+
     const admin = await Admin.findOne({ usuario: usuario, password: password });
+
+    console.log("Admin encontrado con ese usuario/password exacto:", admin ? admin.usuario : "NINGUNO");
+
+    const soloUsuario = await Admin.findOne({ usuario: usuario });
+    console.log("Admin encontrado solo por usuario:", soloUsuario ? JSON.stringify({usuario: soloUsuario.usuario, activo: soloUsuario.activo}) : "NINGUNO");
 
     if (!admin) {
         res.status(401).json({ error: "Usuario o contraseña incorrectos." });
