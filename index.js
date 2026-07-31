@@ -186,6 +186,17 @@ app.get("/api/sugerencias", async (req, res) => {
     res.json(sugerencias);
 
 });
+
+app.delete("/api/sugerencias/:id", async (req, res) => {
+
+    const id = req.params.id;
+
+    await Sugerencia.findByIdAndDelete(id);
+
+    const sugerencias = await Sugerencia.find().sort({ fecha: -1 });
+    res.json(sugerencias);
+
+});
 const Comunidad = mongoose.model("Comunidad", comunidadSchema);
 
 const adminSchema = new mongoose.Schema({

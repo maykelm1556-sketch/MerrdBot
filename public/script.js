@@ -1027,14 +1027,17 @@ function cargarSugerencias() {
 
             listaSugerencias.innerHTML = "";
 
-            sugerencias.forEach(s => {
+          sugerencias.forEach(s => {
 
                 const fecha = new Date(s.fecha).toLocaleString();
 
                 listaSugerencias.innerHTML += `
-                    <div style="background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:10px; margin-bottom:8px;">
-                        <p style="margin:0;">${s.texto}</p>
-                        <small style="color:#888;">${fecha}</small>
+                    <div style="background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                        <div>
+                            <p style="margin:0;">${escaparHtml(s.texto)}</p>
+                            <small style="color:#888;">${fecha}</small>
+                        </div>
+                        <button class="eliminarSugerencia" data-id="${s._id}" style="background:#ff3b3b; color:#fff; border:none; border-radius:6px; padding:6px 10px; cursor:pointer; font-size:14px;">🗑️</button>
                     </div>
                 `;
 
@@ -1572,5 +1575,20 @@ guardarConfigWatchtime.addEventListener("click", () => {
     })
         .then(response => response.json())
         .then(() => alert("Configuración guardada."));
+
+});
+document.addEventListener("click", (e) => {
+
+    if (e.target.classList.contains("eliminarSugerencia")) {
+
+        const id = e.target.dataset.id;
+
+        fetch(`/api/sugerencias/${id}`, {
+            method: "DELETE"
+        })
+            .then(response => response.json())
+            .then(() => cargarSugerencias());
+
+    }
 
 });
