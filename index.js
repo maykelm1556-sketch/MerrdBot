@@ -595,6 +595,57 @@ app.get("/api/estado-vivo", (req, res) => {
     res.json({ enVivo: canalEnVivo });
 });
 
+const configPuntosSchema = new mongoose.Schema({
+    clave: { type: String, unique: true },
+    puntosPorMinuto: { type: Number, default: 1 },
+    xpPorMinuto: { type: Number, default: 1 }
+});
+
+const ConfigPuntos = mongoose.model("ConfigPuntos", configPuntosSchema);
+
+let configWatchtime = { puntosPorMinuto: 1, xpPorMinuto: 1 };
+
+async function cargarConfigWatchtime() {
+
+    const existente = await ConfigPuntos.findOne({ clave: "watchtime" });
+
+    if (existente) {
+        configWatchtime = { puntosPorMinuto: existente.puntosPorMinuto, xpPorMinuto: existente.xpPorMinuto };
+    } else {
+        const nueva = new ConfigPuntos({ clave: "watchtime", puntosPorMinuto: 1, xpPorMinuto: 1 });
+        await nueva.save();
+    }
+
+}
+
+cargarConfigWatchtime();
+
+app.get("/api/config-watchtime", (req, res) => {
+    res.json(configWatchtime);
+});
+
+app.post("/api/config-watchtime", async (req, res) => {
+
+    const puntosPorMinuto = parseInt(req.body.puntosPorMinuto);
+    const xpPorMinuto = parseInt(req.body.xpPorMinuto);
+
+    if (isNaN(puntosPorMinuto) || isNaN(xpPorMinuto)) {
+        res.status(400).json({ error: "Valores inválidos." });
+        return;
+    }
+
+    await ConfigPuntos.findOneAndUpdate(
+        { clave: "watchtime" },
+        { clave: "watchtime", puntosPorMinuto: puntosPorMinuto, xpPorMinuto: xpPorMinuto },
+        { upsert: true }
+    );
+
+    configWatchtime = { puntosPorMinuto: puntosPorMinuto, xpPorMinuto: xpPorMinuto };
+
+    res.json(configWatchtime);
+
+});
+
 async function sumarPorTiempoEnVivo() {
 
     if (!canalEnVivo) return;
@@ -603,11 +654,11 @@ async function sumarPorTiempoEnVivo() {
 
     const usuariosActivos = await Comunidad.find({ ultimaActividad: { $gte: limite } });
 
-    for (const usuario of usuariosActivos) {
+for (const usuario of usuariosActivos) {
 
         usuario.watchtime += 1;
-        usuario.puntos += 1;
-        usuario.xp += 1;
+        usuario.puntos += configWatchtime.puntosPorMinuto;
+        usuario.xp += configWatchtime.xpPorMinuto;
 
         if (usuario.xp >= 100) {
             usuario.nivel += 1;
