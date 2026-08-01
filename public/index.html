@@ -218,6 +218,15 @@
 
                 <h2>Sorteos</h2>
 
+                <div id="selectorModoSorteo" style="display:flex; gap:12px; margin-bottom:20px;">
+                    <button id="modoInstantaneoBtn" class="modo-sorteo-btn modo-activo">
+                        🎁 Ganador instantáneo
+                    </button>
+                    <button id="modoRuletaBtn" class="modo-sorteo-btn">
+                        🎡 Ruleta
+                    </button>
+                </div>
+
                 <input
                     type="text"
                     id="nombreSorteo"
@@ -244,69 +253,42 @@
 
                 <ul id="listaParticipantes"></ul>
 
-                <label for="duracionGiro">Duración del giro (segundos):</label>
-                <input type="number" id="duracionGiro" value="1.5" min="0.5" max="10" step="0.5">
+                <div id="panelInstantaneo">
 
-                <button id="girarRuleta" class="admin-only">
-                    🎡 Girar la ruleta
-                </button>
+                    <label for="duracionGiro">Duración del giro (segundos):</label>
+                    <input type="number" id="duracionGiro" value="1.5" min="0.5" max="10" step="0.5">
 
-                <h3 id="resultadoSorteo"></h3>
-                <button id="eliminarGanador" style="display:none;">Quitar ganador de la lista</button>
+                    <button id="girarRuleta" class="admin-only">
+                        🎡 Girar la ruleta
+                    </button>
 
-            </div>
+                    <h3 id="resultadoSorteo"></h3>
+                    <button id="eliminarGanador" style="display:none;">Quitar ganador de la lista</button>
 
-            <!-- RULETA -->
+                </div>
 
-            <div class="tab-panel" id="ruleta">
+                <div id="panelRuleta" style="display:none;">
 
-                <h2>Ruleta</h2>
+                    <label for="duracionGiroVisual">Duración del giro (segundos):</label>
+                    <input type="number" id="duracionGiroVisual" value="4" min="1" max="10" step="0.5">
 
-             <input
-                    type="text"
-                    id="nombreRuletaVisual"
-                    placeholder="Nombre del participante">
-
-                <button id="agregarRuletaVisual" class="admin-only">
-                    Agregar
-                </button>
-
-               <div class="menu-sincronizar admin-only">
-                    <button id="btnSincronizarRuleta">🔄 Sincronizar usuarios ▼</button>
-                    <div id="dropdownSincronizarRuleta" style="display:none;">
-                        <button id="importarEconomiaRuleta">Desde Economía</button>
-                        <button id="importarComunidadRuleta">Desde Comunidad</button>
+                    <div id="contenedorRuedaVisual">
+                        <div id="puntero"></div>
+                        <div id="ruedaVisual"></div>
                     </div>
+
+                    <button id="girarRuedaVisual" class="admin-only">
+                        Girar
+                    </button>
+
+                    <button id="barajearRuletaVisual" class="admin-only" style="margin-left: 20px;">
+                        🔀 Barajear
+                    </button>
+
+                    <h3 id="resultadoRuedaVisual"></h3>
+                    <button id="eliminarGanadorRuleta" class="admin-only" style="display:none;">Quitar ganador de la lista</button>
+
                 </div>
-
-              <div class="admin-only" style="margin-top:16px; margin-bottom:16px;">
-                    <label for="comandoAutoRuletaInput">Comando para unirse por chat:</label>
-                    <input type="text" id="comandoAutoRuletaInput" placeholder="Ej: !ruleta">
-                    <button id="toggleComandoAutoRuleta">Desactivado</button>
-                    <button id="guardarComandoAutoRuleta">Guardar</button>
-                   <button id="quitarComandoAutoRuleta" class="eliminarUsuario">🗑️ Quitar comando</button>
-                </div>
-
-            <ul id="listaRuletaVisual"></ul>
-
-                <label for="duracionGiroVisual">Duración del giro (segundos):</label>
-                <input type="number" id="duracionGiroVisual" value="4" min="1" max="10" step="0.5">
-
-                <div id="contenedorRuedaVisual">
-                    <div id="puntero"></div>
-                    <div id="ruedaVisual"></div>
-                </div>
-
-                <button id="girarRuedaVisual" class="admin-only">
-                    Girar
-                </button>
-
-                <button id="barajearRuletaVisual" class="admin-only" style="margin-left: 20px;">
-                    🔀 Barajear
-                </button>
-
-                <h3 id="resultadoRuedaVisual"></h3>
-                <button id="eliminarGanadorRuleta" class="admin-only" style="display:none;">Quitar ganador de la lista</button>
 
             </div>
 

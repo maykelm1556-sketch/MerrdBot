@@ -1492,3 +1492,24 @@ label[for="duracionGiroVisual"] {
 #guardarConfigWatchtime:hover {
     background-color: #2ecc10;
 }
+.modo-sorteo-btn {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border: 1px solid #333;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.modo-sorteo-btn:hover {
+    border-color: #39ff14;
+}
+
+.modo-sorteo-btn.modo-activo {
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border-color: #39ff14;
+}

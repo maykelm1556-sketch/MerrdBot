@@ -396,6 +396,8 @@ function renderParticipantes() {
         </li>
     `;
     });
+
+    dibujarRueda();
 }
 
 const importarEconomia = document.getElementById("importarEconomia");
@@ -407,15 +409,9 @@ const cancelarPuntosMinimos = document.getElementById("cancelarPuntosMinimos");
 
 const btnSincronizarSorteos = document.getElementById("btnSincronizarSorteos");
 const dropdownSincronizarSorteos = document.getElementById("dropdownSincronizarSorteos");
-const btnSincronizarRuleta = document.getElementById("btnSincronizarRuleta");
-const dropdownSincronizarRuleta = document.getElementById("dropdownSincronizarRuleta");
 
 btnSincronizarSorteos.addEventListener("click", () => {
     dropdownSincronizarSorteos.style.display = dropdownSincronizarSorteos.style.display === "block" ? "none" : "block";
-});
-
-btnSincronizarRuleta.addEventListener("click", () => {
-    dropdownSincronizarRuleta.style.display = dropdownSincronizarRuleta.style.display === "block" ? "none" : "block";
 });
 
 document.addEventListener("click", (e) => {
@@ -424,11 +420,9 @@ document.addEventListener("click", (e) => {
         dropdownSincronizarSorteos.style.display = "none";
     }
 
-    if (!btnSincronizarRuleta.contains(e.target) && !dropdownSincronizarRuleta.contains(e.target)) {
-        dropdownSincronizarRuleta.style.display = "none";
-    }
-
 });
+
+let origenImportacion = "economia";
 
 importarEconomia.addEventListener("click", () => {
 
@@ -440,15 +434,13 @@ importarEconomia.addEventListener("click", () => {
     origenImportacion = "economia";
     puntosMinimosInput.value = "";
     modalPuntosMinimos.style.display = "flex";
+    dropdownSincronizarSorteos.style.display = "none";
 
 });
 
 cancelarPuntosMinimos.addEventListener("click", () => {
     modalPuntosMinimos.style.display = "none";
 });
-
-let origenImportacion = "economia";
-let destinoImportacion = "sorteos";
 
 const importarComunidad = document.getElementById("importarComunidad");
 
@@ -459,44 +451,10 @@ importarComunidad.addEventListener("click", () => {
         return;
     }
 
-   origenImportacion = "comunidad";
-    destinoImportacion = "sorteos";
+    origenImportacion = "comunidad";
     puntosMinimosInput.value = "";
     modalPuntosMinimos.style.display = "flex";
     dropdownSincronizarSorteos.style.display = "none";
-
-});
-
-const importarEconomiaRuleta = document.getElementById("importarEconomiaRuleta");
-const importarComunidadRuleta = document.getElementById("importarComunidadRuleta");
-
-importarEconomiaRuleta.addEventListener("click", () => {
-
-    if (economia.length === 0) {
-        alert("No hay usuarios en Economía todavía.");
-        return;
-    }
-
- origenImportacion = "economia";
-    destinoImportacion = "ruleta";
-    puntosMinimosInput.value = "";
-    modalPuntosMinimos.style.display = "flex";
-    dropdownSincronizarRuleta.style.display = "none";
-
-});
-
-importarComunidadRuleta.addEventListener("click", () => {
-
-    if (comunidadDatos.length === 0) {
-        alert("No hay usuarios en Comunidad todavía.");
-        return;
-    }
-
-   origenImportacion = "comunidad";
-    destinoImportacion = "ruleta";
-    puntosMinimosInput.value = "";
-    modalPuntosMinimos.style.display = "flex";
-    dropdownSincronizarRuleta.style.display = "none";
 
 });
 
@@ -518,26 +476,13 @@ confirmarPuntosMinimos.addEventListener("click", () => {
         return;
     }
 
-    if (destinoImportacion === "ruleta") {
+    usuariosFiltrados.forEach((usuario) => {
+        if (!participantes.includes(usuario.usuario)) {
+            participantes.push(usuario.usuario);
+        }
+    });
 
-        usuariosFiltrados.forEach((usuario) => {
-            if (!participantesRuletaVisual.includes(usuario.usuario)) {
-                participantesRuletaVisual.push(usuario.usuario);
-            }
-        });
-
-        renderListaRuletaVisual();
-
-    } else {
-
-        usuariosFiltrados.forEach((usuario) => {
-            if (!participantes.includes(usuario.usuario)) {
-                participantes.push(usuario.usuario);
-            }
-        });
-
-        renderParticipantes();
-    }
+    renderParticipantes();
 
     modalPuntosMinimos.style.display = "none";
 
@@ -735,11 +680,6 @@ document.querySelectorAll(".ordenable").forEach((th) => {
     });
 
 });
-const participantesRuletaVisual = [];
-
-const nombreRuletaVisual = document.getElementById("nombreRuletaVisual");
-const agregarRuletaVisual = document.getElementById("agregarRuletaVisual");
-const listaRuletaVisual = document.getElementById("listaRuletaVisual");
 const ruedaVisual = document.getElementById("ruedaVisual");
 const girarRuedaVisual = document.getElementById("girarRuedaVisual");
 const resultadoRuedaVisual = document.getElementById("resultadoRuedaVisual");
@@ -748,27 +688,11 @@ const duracionGiroVisual = document.getElementById("duracionGiroVisual");
 
 const coloresRueda = ["#39ff14", "#ff3b3b", "#facc15", "#8b5cf6", "#2ecc71", "#3b82f6", "#ff8c00", "#ec4899", "#06b6d4", "#f472b6", "#a3e635", "#fb923c", "#818cf8", "#facc15", "#f87171", "#34d399"];
 
-function renderListaRuletaVisual() {
-
-    listaRuletaVisual.innerHTML = "";
-
-  participantesRuletaVisual.forEach((nombre, index) => {
-        listaRuletaVisual.innerHTML += `
-        <li>
-            ${escaparHtml(nombre)}
-            <button class="eliminarRuletaVisual" data-index="${index}">Eliminar</button>
-        </li>
-    `;
-    });
-
-    dibujarRueda();
-}
-
 function dibujarRueda() {
 
     ruedaVisual.innerHTML = "";
 
-    const total = participantesRuletaVisual.length;
+    const total = participantes.length;
 
     if (total === 0) {
         ruedaVisual.style.background = "#1a1a1a";
@@ -778,7 +702,7 @@ function dibujarRueda() {
     const porcion = 360 / total;
     let gradiente = "conic-gradient(";
 
-    participantesRuletaVisual.forEach((nombre, index) => {
+    participantes.forEach((nombre, index) => {
         const color = coloresRueda[index % coloresRueda.length];
         const inicio = porcion * index;
         const fin = porcion * (index + 1);
@@ -789,7 +713,7 @@ function dibujarRueda() {
     gradiente += ")";
     ruedaVisual.style.background = gradiente;
 
-const radio = ruedaVisual.offsetWidth / 2;
+    const radio = ruedaVisual.offsetWidth / 2;
     const distanciaBase = total > 8 ? radio * 0.72 : radio * 0.58;
 
     let tamanoFuente = 12;
@@ -804,7 +728,7 @@ const radio = ruedaVisual.offsetWidth / 2;
         anchoMaximo = 45;
     }
 
-    participantesRuletaVisual.forEach((nombre, index) => {
+    participantes.forEach((nombre, index) => {
 
         const angulo = porcion * index + porcion / 2;
         const anguloRad = angulo * Math.PI / 180;
@@ -826,39 +750,14 @@ const radio = ruedaVisual.offsetWidth / 2;
 
 }
 
-agregarRuletaVisual.addEventListener("click", () => {
-
-    const nombre = nombreRuletaVisual.value.trim();
-
-    if (nombre === "") {
-        alert("Escribe un nombre.");
-        return;
-    }
-
-    participantesRuletaVisual.push(nombre);
-    renderListaRuletaVisual();
-    nombreRuletaVisual.value = "";
-
-});
-
-document.addEventListener("click", (e) => {
-
-    if (e.target.classList.contains("eliminarRuletaVisual")) {
-        const index = parseInt(e.target.dataset.index);
-        participantesRuletaVisual.splice(index, 1);
-        renderListaRuletaVisual();
-    }
-
-});
-
 barajearRuletaVisual.addEventListener("click", () => {
 
-    for (let i = participantesRuletaVisual.length - 1; i > 0; i--) {
+    for (let i = participantes.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [participantesRuletaVisual[i], participantesRuletaVisual[j]] = [participantesRuletaVisual[j], participantesRuletaVisual[i]];
+        [participantes[i], participantes[j]] = [participantes[j], participantes[i]];
     }
 
-    renderListaRuletaVisual();
+    renderParticipantes();
 
 });
 
@@ -866,16 +765,17 @@ let girando = false;
 
 girarRuedaVisual.addEventListener("click", () => {
 
-    if (girando) return;
+   if (girando) return;
 
-    const total = participantesRuletaVisual.length;
+    const participantesSnapshot = [...participantes];
+    const total = participantesSnapshot.length;
 
     if (total === 0) {
         alert("Agrega al menos un participante.");
         return;
     }
 
-girando = true;
+    girando = true;
     resultadoRuedaVisual.textContent = "";
 
     const segundos = parseFloat(duracionGiroVisual.value) || 4;
@@ -890,7 +790,7 @@ girando = true;
 
     ruedaVisual.offsetHeight;
 
-   ruedaVisual.style.transition = `transform ${segundos}s cubic-bezier(0.17, 0.67, 0.12, 0.99)`;
+    ruedaVisual.style.transition = `transform ${segundos}s cubic-bezier(0.17, 0.67, 0.12, 0.99)`;
     ruedaVisual.style.transform = `rotate(${rotacionFinal}deg)`;
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -939,13 +839,20 @@ girando = true;
             if (anguloReal < 0) anguloReal += 360;
         }
 
-        const anguloOriginal = (360 - anguloReal) % 360;
+    const anguloOriginal = (360 - anguloReal) % 360;
         const indiceGanador = Math.floor(anguloOriginal / porcion) % total;
 
-    clearInterval(intervaloTick);
+        console.log("--- DIAGNÓSTICO RULETA ---");
+        console.log("participantes:", participantes);
+        console.log("total:", total, "| porcion:", porcion);
+        console.log("anguloReal:", anguloReal);
+        console.log("anguloOriginal:", anguloOriginal);
+        console.log("indiceGanador calculado:", indiceGanador, "-> nombre:", participantes[indiceGanador]);
+
+        clearInterval(intervaloTick);
         reproducirFanfarria();
 
-        const nombreGanador = participantesRuletaVisual[indiceGanador];
+       const nombreGanador = participantesSnapshot[indiceGanador];
         resultadoRuedaVisual.textContent = "🎉 Ganador: " + nombreGanador;
 
         eliminarGanadorRuleta.dataset.nombre = nombreGanador;
@@ -963,11 +870,11 @@ eliminarGanadorRuleta.addEventListener("click", () => {
 
     const nombre = eliminarGanadorRuleta.dataset.nombre;
 
-    const index = participantesRuletaVisual.indexOf(nombre);
+    const index = participantes.indexOf(nombre);
 
     if (index !== -1) {
-        participantesRuletaVisual.splice(index, 1);
-        renderListaRuletaVisual();
+        participantes.splice(index, 1);
+        renderParticipantes();
     }
 
     resultadoRuedaVisual.textContent = "";
@@ -1408,65 +1315,6 @@ quitarComandoAutoSorteos.addEventListener("click", () => {
 
 });
 
-const comandoAutoRuletaInput = document.getElementById("comandoAutoRuletaInput");
-const toggleComandoAutoRuleta = document.getElementById("toggleComandoAutoRuleta");
-const guardarComandoAutoRuleta = document.getElementById("guardarComandoAutoRuleta");
-
-let comandoAutoRuletaActivo = false;
-
-function pintarToggleRuleta() {
-    toggleComandoAutoRuleta.textContent = comandoAutoRuletaActivo ? "Activado" : "Desactivado";
-    toggleComandoAutoRuleta.style.backgroundColor = comandoAutoRuletaActivo ? "#39ff14" : "#ff3b3b";
-    toggleComandoAutoRuleta.style.color = comandoAutoRuletaActivo ? "#0a0a0a" : "#ffffff";
-}
-
-function cargarComandoAutoRuleta() {
-    fetch("/api/comando-auto/ruleta")
-        .then(response => response.json())
-        .then(data => {
-            comandoAutoRuletaInput.value = data.comando || "";
-            comandoAutoRuletaActivo = data.activo || false;
-            pintarToggleRuleta();
-        });
-}
-
-cargarComandoAutoRuleta();
-
-toggleComandoAutoRuleta.addEventListener("click", () => {
-    comandoAutoRuletaActivo = !comandoAutoRuletaActivo;
-    pintarToggleRuleta();
-});
-
-guardarComandoAutoRuleta.addEventListener("click", () => {
-    const comando = comandoAutoRuletaInput.value.trim();
-    fetch("/api/comando-auto/ruleta", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ comando: comando, activo: comandoAutoRuletaActivo })
-    })
-        .then(response => response.json())
-        .then(() => alert("Comando de Ruleta guardado."));
-});
-
-const quitarComandoAutoRuleta = document.getElementById("quitarComandoAutoRuleta");
-
-quitarComandoAutoRuleta.addEventListener("click", () => {
-
-    fetch("/api/comando-auto/ruleta", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ comando: "", activo: false })
-    })
-        .then(response => response.json())
-        .then(() => {
-            comandoAutoRuletaInput.value = "";
-            comandoAutoRuletaActivo = false;
-            pintarToggleRuleta();
-            alert("Comando de Ruleta eliminado y desactivado.");
-        });
-
-});
-
 function revisarPendientesSorteo() {
     fetch("/api/sorteos/pendientes")
         .then(response => response.json())
@@ -1481,22 +1329,7 @@ function revisarPendientesSorteo() {
         });
 }
 
-function revisarPendientesRuleta() {
-    fetch("/api/ruleta/pendientes")
-        .then(response => response.json())
-        .then(nombres => {
-            if (nombres.length === 0) return;
-            nombres.forEach(nombre => {
-                if (!participantesRuletaVisual.includes(nombre)) {
-                    participantesRuletaVisual.push(nombre);
-                }
-            });
-            renderListaRuletaVisual();
-        });
-}
-
 setInterval(revisarPendientesSorteo, 5000);
-setInterval(revisarPendientesRuleta, 5000);
 
 function revisarControlMusica() {
     fetch("/api/musica/control-pendientes")
@@ -1569,4 +1402,22 @@ document.addEventListener("click", (e) => {
 
     }
 
+});
+const modoInstantaneoBtn = document.getElementById("modoInstantaneoBtn");
+const modoRuletaBtn = document.getElementById("modoRuletaBtn");
+const panelInstantaneo = document.getElementById("panelInstantaneo");
+const panelRuleta = document.getElementById("panelRuleta");
+
+modoInstantaneoBtn.addEventListener("click", () => {
+    modoInstantaneoBtn.classList.add("modo-activo");
+    modoRuletaBtn.classList.remove("modo-activo");
+    panelInstantaneo.style.display = "block";
+    panelRuleta.style.display = "none";
+});
+
+modoRuletaBtn.addEventListener("click", () => {
+    modoRuletaBtn.classList.add("modo-activo");
+    modoInstantaneoBtn.classList.remove("modo-activo");
+    panelRuleta.style.display = "block";
+    panelInstantaneo.style.display = "none";
 });
