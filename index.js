@@ -601,7 +601,34 @@ async function verificarEnVivo() {
 
 verificarEnVivo();
 setInterval(verificarEnVivo, 20000);
+app.get("/api/estado-vivo", (req, res) => {
+    res.json({ enVivo: canalEnVivo });
+});
 
+app.get("/api/clips", async (req, res) => {
+
+    try {
+
+        const respuesta = await fetch(`https://kick.com/api/v2/channels/${KICK_SLUG}/clips?cursor=0&sort=date`, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+        });
+
+        console.log("DIAGNOSTICO_CLIPS_STATUS:", respuesta.status);
+
+        const datos = await respuesta.json();
+
+        console.log("DIAGNOSTICO_CLIPS_DATOS:", JSON.stringify(datos).slice(0, 1500));
+
+        res.json(datos);
+
+    } catch (error) {
+        console.log("Error obteniendo clips:", error.message);
+        res.status(500).json({ error: "Error obteniendo clips." });
+    }
+
+});
 
 const configPuntosSchema = new mongoose.Schema({
     clave: { type: String, unique: true },
