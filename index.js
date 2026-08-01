@@ -989,6 +989,36 @@ let usuario = null;
                 console.log("✅ Agregado a pendientes de Ruleta:", usuario);
             }
 
+          if (esMod && comando.startsWith("!add ")) {
+
+                const partes = texto.trim().split(/\s+/);
+                const cantidad = parseInt(partes[1]);
+                const nombreObjetivo = (partes[2] || "").replace("@", "");
+
+                if (isNaN(cantidad) || !nombreObjetivo) {
+                    await enviarMensajeChat(`@${usuario} formato correcto: !add 5000 @usuario`);
+                } else {
+
+                    const usuarioEconomia = await Usuario.findOne({ usuario: { $regex: new RegExp(`^${nombreObjetivo}$`, "i") } });
+
+                    if (!usuarioEconomia) {
+                        await enviarMensajeChat(`@${usuario} no encontré a "${nombreObjetivo}" en Economía.`);
+                    } else {
+
+                        usuarioEconomia.puntos += cantidad;
+                        await usuarioEconomia.save();
+
+                        const economiaActualizada = await Usuario.find();
+                        io.emit("economia-actualizada", economiaActualizada);
+
+                        await enviarMensajeChat(`@${usuario} se agregaron ${cantidad} puntos a ${usuarioEconomia.usuario}. Ahora tiene ${usuarioEconomia.puntos} pts.`);
+
+                    }
+
+                }
+
+            }
+
             if (esMod) {
 
                 if (comando === "!mpausar") {
