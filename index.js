@@ -602,9 +602,6 @@ async function verificarEnVivo() {
 verificarEnVivo();
 setInterval(verificarEnVivo, 20000);
 
-app.get("/api/estado-vivo", (req, res) => {
-    res.json({ enVivo: canalEnVivo });
-});
 
 const configPuntosSchema = new mongoose.Schema({
     clave: { type: String, unique: true },
