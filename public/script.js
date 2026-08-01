@@ -1264,26 +1264,6 @@ function onPlayerError(event) {
 
 }
 
-const coverMusica = document.getElementById("coverMusica");
-const coverMusicaTitulo = document.getElementById("coverMusicaTitulo");
-const coverMusicaPedido = document.getElementById("coverMusicaPedido");
-
-function actualizarCoverMusica() {
-
-    if (colaMusica.length === 0) {
-        coverMusica.style.backgroundImage = "";
-        coverMusicaTitulo.textContent = "Sin canciones en la cola";
-        coverMusicaPedido.textContent = "";
-        return;
-    }
-
-    const actual = colaMusica[0];
-
-    coverMusica.style.backgroundImage = `url(https://img.youtube.com/vi/${actual.videoId}/hqdefault.jpg)`;
-    coverMusicaTitulo.textContent = actual.titulo;
-    coverMusicaPedido.textContent = "Pedido por " + actual.pedidoPor;
-
-}
 
 function renderColaMusica() {
 
@@ -1302,9 +1282,7 @@ function renderColaMusica() {
     `;
     });
 
-    actualizarCoverMusica();
-
-}
+  }
 
 function cargarColaMusica() {
 
