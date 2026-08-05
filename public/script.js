@@ -172,6 +172,320 @@ socket.on("economia-actualizada", (data) => {
     renderEconomia();
 });
 
+let misClips = [];
+const clipsLista = document.getElementById("clipsLista");
+
+function renderClips() {
+
+    clipsLista.innerHTML = "";
+
+    if (misClips.length === 0) {
+        clipsLista.innerHTML = "<p>Todavía no hay clips.</p>";
+        return;
+    }
+
+    misClips.forEach((clip) => {
+        clipsLista.innerHTML += `
+        <div class="usuario-item" style="align-items:flex-start; gap:12px; flex-wrap:wrap;">
+       <video src="${clip.rutaVideoVertical}" poster="${clip.miniatura}" controls style="width:140px; border-radius:6px; background:#000;"></video>
+            <div style="flex:1; min-width:150px;">
+                <p style="margin:0;">${escaparHtml(clip.titulo)}</p>
+                <small style="color:#888;">${clip.duracionSegundos}s · ${clip.usuarioCreador}</small>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+               <button class="editarUsuario renombrarClip" data-id="${clip._id}">✏️ Renombrar</button>
+             <button class="editarUsuario recortarClip" data-id="${clip._id}" data-duracion="${clip.duracionSegundos}">✂️ Recortar más</button>
+                <button class="editarUsuario editarPosicionClip" data-id="${clip._id}" data-zoom="${clip.zoom || 100}" data-offsetx="${clip.offsetX || 0}" data-offsety="${clip.offsetY || 0}">🖼️ Editar posición</button>
+              <a href="${clip.rutaVideoVertical}" download class="editarUsuario" style="text-decoration:none; display:inline-block;">⬇️ Descargar</a>
+                <button class="eliminarUsuario eliminarClip" data-id="${clip._id}">🗑️ Eliminar</button>
+            </div>
+        </div>
+    `;
+    });
+
+}
+
+document.addEventListener("click", (e) => {
+
+    if (e.target.classList.contains("renombrarClip")) {
+
+        const id = e.target.dataset.id;
+        const clip = misClips.find(c => c._id === id);
+        if (!clip) return;
+
+        const nuevoTitulo = prompt("Nuevo título del clip:", clip.titulo);
+
+        if (nuevoTitulo === null || nuevoTitulo.trim() === "") return;
+
+        fetch(`/api/clips/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ titulo: nuevoTitulo.trim() })
+        })
+            .then(response => response.json())
+            .then((clipActualizado) => {
+                const index = misClips.findIndex(c => c._id === id);
+                if (index !== -1) misClips[index] = clipActualizado;
+                renderClips();
+            });
+
+    }
+
+  if (e.target.classList.contains("recortarClip")) {
+
+        const id = e.target.dataset.id;
+        const duracionActual = parseFloat(e.target.dataset.duracion);
+
+        const inicioTexto = prompt(`Duración actual: ${duracionActual}s.\n¿Desde qué segundo querés que empiece? (0 = desde el inicio)`, "0");
+        if (inicioTexto === null) return;
+
+        const duracionTexto = prompt("¿Cuántos segundos de duración querés?", String(Math.min(duracionActual, 10)));
+        if (duracionTexto === null) return;
+
+        const inicioSegundos = parseFloat(inicioTexto);
+        const duracionSegundos = parseFloat(duracionTexto);
+
+        if (isNaN(inicioSegundos) || isNaN(duracionSegundos)) {
+            alert("Escribe números válidos.");
+            return;
+        }
+
+        fetch(`/api/clips/${id}/recortar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ inicioSegundos, duracionSegundos })
+        })
+            .then(response => response.json().then(data => ({ status: response.status, data })))
+            .then(({ status, data }) => {
+
+                if (status !== 200) {
+                    alert(data.error || "No se pudo recortar el clip.");
+                    return;
+                }
+
+                const index = misClips.findIndex(c => c._id === id);
+                if (index !== -1) misClips[index] = data;
+                renderClips();
+
+                alert("Clip recortado correctamente.");
+
+            });
+
+    }
+
+if (e.target.classList.contains("editarPosicionClip")) {
+
+        idClipEditandoPosicion = e.target.dataset.id;
+
+        const clip = misClips.find(c => c._id === idClipEditandoPosicion);
+        if (!clip) return;
+
+       sliderZoom.value = clip.zoom || 100;
+        sliderOffsetX.value = clip.offsetX || 0;
+        sliderOffsetY.value = clip.offsetY || 0;
+        sliderSubtitulo.value = clip.subtituloMarginV !== undefined ? clip.subtituloMarginV : 40;
+
+      previaEdicionVideo.src = clip.rutaVideo;
+        previaEdicionVideo.load();
+        previaEdicionVideo.play().catch(() => {});
+
+        actualizarPreviaEdicion();
+
+        const rutaSrtClip = clip.rutaVideoVertical.replace(".mp4", ".srt");
+        cargarSubtitulosPreview(rutaSrtClip);
+
+        modalEditarPosicion.style.display = "flex";
+
+    }
+
+    if (e.target.classList.contains("eliminarClip")) {
+
+        const id = e.target.dataset.id;
+
+        if (!confirm("¿Eliminar este clip? Esta acción no se puede deshacer.")) return;
+
+        fetch(`/api/clips/${id}`, {
+            method: "DELETE"
+        })
+            .then(response => response.json())
+            .then(() => {
+                misClips = misClips.filter(c => c._id !== id);
+                renderClips();
+            });
+
+    }
+
+});
+
+function cargarClips() {
+
+    fetch("/api/clips")
+        .then(response => response.json())
+        .then(data => {
+            misClips = data;
+            renderClips();
+        });
+
+}
+
+cargarClips();
+
+socket.on("clip-nuevo", (clip) => {
+    misClips.unshift(clip);
+    renderClips();
+});
+
+const modalEditarPosicion = document.getElementById("modalEditarPosicion");
+const previaEdicionVideo = document.getElementById("previaEdicionVideo");
+const sliderZoom = document.getElementById("sliderZoom");
+const sliderOffsetX = document.getElementById("sliderOffsetX");
+const sliderOffsetY = document.getElementById("sliderOffsetY");
+const sliderSubtitulo = document.getElementById("sliderSubtitulo");
+const valorZoom = document.getElementById("valorZoom");
+const valorOffsetX = document.getElementById("valorOffsetX");
+const valorOffsetY = document.getElementById("valorOffsetY");
+const valorSubtitulo = document.getElementById("valorSubtitulo");
+const guardarEdicionPosicion = document.getElementById("guardarEdicionPosicion");
+const cancelarEdicionPosicion = document.getElementById("cancelarEdicionPosicion");
+
+let idClipEditandoPosicion = null;
+let subtitulosPreviewActuales = [];
+
+function tiempoSrtASegundos(texto) {
+    const partes = texto.split(",");
+    const [horas, minutos, segundos] = partes[0].split(":").map(Number);
+    const milisegundos = parseInt(partes[1]);
+    return horas * 3600 + minutos * 60 + segundos + milisegundos / 1000;
+}
+
+function parsearSrt(contenidoSrt) {
+
+    const bloques = contenidoSrt.trim().split(/\n\s*\n/);
+
+    return bloques.map((bloque) => {
+
+        const lineas = bloque.split("\n");
+        const lineaTiempo = lineas.find(l => l.includes("-->"));
+
+        if (!lineaTiempo) return null;
+
+        const [inicioTexto, finTexto] = lineaTiempo.split("-->").map(s => s.trim());
+        const texto = lineas.slice(lineas.indexOf(lineaTiempo) + 1).join(" ").trim();
+
+        return {
+            inicio: tiempoSrtASegundos(inicioTexto),
+            fin: tiempoSrtASegundos(finTexto),
+            texto: texto
+        };
+
+    }).filter(Boolean);
+
+}
+
+function cargarSubtitulosPreview(rutaSrt) {
+
+    subtitulosPreviewActuales = [];
+    previaEdicionSubtitulo.textContent = "";
+
+    fetch(rutaSrt)
+        .then(response => {
+            if (!response.ok) throw new Error("Sin subtítulos");
+            return response.text();
+        })
+        .then(contenidoSrt => {
+            subtitulosPreviewActuales = parsearSrt(contenidoSrt);
+        })
+        .catch(() => {
+            subtitulosPreviewActuales = [];
+        });
+
+}
+
+const previaEdicionSubtitulo = document.getElementById("previaEdicionSubtitulo");
+
+previaEdicionVideo.addEventListener("timeupdate", () => {
+
+    const tiempoActual = previaEdicionVideo.currentTime;
+
+    const subtituloActivo = subtitulosPreviewActuales.find(
+        s => tiempoActual >= s.inicio && tiempoActual <= s.fin
+    );
+
+    previaEdicionSubtitulo.textContent = subtituloActivo ? subtituloActivo.texto : "";
+
+});
+
+function actualizarPreviaEdicion() {
+
+    const zoom = parseFloat(sliderZoom.value);
+    const offsetX = parseFloat(sliderOffsetX.value);
+    const offsetY = parseFloat(sliderOffsetY.value);
+
+   const margenSubtitulo = parseFloat(sliderSubtitulo.value);
+
+    valorZoom.textContent = zoom;
+    valorOffsetX.textContent = offsetX;
+    valorOffsetY.textContent = offsetY;
+    valorSubtitulo.textContent = margenSubtitulo;
+
+    previaEdicionSubtitulo.style.bottom = `${margenSubtitulo / 5}px`;
+
+const escalaPreview = 150 / 1080;
+    const desplazX = offsetX * escalaPreview;
+    const desplazY = offsetY * escalaPreview;
+
+    previaEdicionVideo.style.transform = `translate(-50%, -50%) translate(${desplazX}px, ${desplazY}px) scale(${zoom / 100})`;
+
+}
+
+[sliderZoom, sliderOffsetX, sliderOffsetY, sliderSubtitulo].forEach((slider) => {
+    slider.addEventListener("input", actualizarPreviaEdicion);
+});
+
+cancelarEdicionPosicion.addEventListener("click", () => {
+    modalEditarPosicion.style.display = "none";
+    idClipEditandoPosicion = null;
+});
+
+guardarEdicionPosicion.addEventListener("click", () => {
+
+    if (!idClipEditandoPosicion) return;
+
+const zoom = parseFloat(sliderZoom.value);
+    const offsetX = parseFloat(sliderOffsetX.value);
+    const offsetY = parseFloat(sliderOffsetY.value);
+    const subtituloMarginV = parseFloat(sliderSubtitulo.value);
+
+    guardarEdicionPosicion.disabled = true;
+    guardarEdicionPosicion.textContent = "Guardando (puede tardar)...";
+
+    fetch(`/api/clips/${idClipEditandoPosicion}/reposicionar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ zoom, offsetX, offsetY, subtituloMarginV })
+    })
+        .then(response => response.json().then(data => ({ status: response.status, data })))
+        .then(({ status, data }) => {
+
+            guardarEdicionPosicion.disabled = false;
+            guardarEdicionPosicion.textContent = "Guardar cambios";
+
+            if (status !== 200) {
+                alert(data.error || "No se pudo reposicionar el clip.");
+                return;
+            }
+
+            const index = misClips.findIndex(c => c._id === idClipEditandoPosicion);
+            if (index !== -1) misClips[index] = data;
+            renderClips();
+
+            modalEditarPosicion.style.display = "none";
+            idClipEditandoPosicion = null;
+
+        });
+
+});
+
 guardarUsuario.addEventListener("click", () => {
 
     if (!adminAutenticado) {
@@ -781,8 +1095,30 @@ girarRuedaVisual.addEventListener("click", () => {
     const segundos = parseFloat(duracionGiroVisual.value) || 4;
     const porcion = 360 / total;
 
+    // ⚠️ SOLO PARA PRUEBA LOCAL — borrar este bloque para volver a la normalidad
+    const NOMBRE_EXCLUIDO_PRUEBA = "Merdo";
+    let indiceForzado = null;
+    if (participantesSnapshot.includes(NOMBRE_EXCLUIDO_PRUEBA)) {
+        const opciones = participantesSnapshot
+            .map((nombre, i) => ({ nombre, i }))
+            .filter(o => o.nombre !== NOMBRE_EXCLUIDO_PRUEBA);
+        indiceForzado = opciones[Math.floor(Math.random() * opciones.length)].i;
+    }
+    // ⚠️ FIN DEL BLOQUE DE PRUEBA
+
     const vueltasExtra = 5 * 360;
-    const giroAleatorio = Math.random() * 360;
+
+    let giroAleatorio;
+    if (indiceForzado !== null) {
+        // apunta al centro del segmento elegido (el puntero está arriba, en 0°)
+        const centroSegmento = porcion * indiceForzado + porcion / 2;
+        const margen = porcion * 0.3;
+        const variacion = (Math.random() * margen * 2) - margen;
+        giroAleatorio = (360 - centroSegmento + variacion + 360) % 360;
+    } else {
+        giroAleatorio = Math.random() * 360;
+    }
+
     const rotacionFinal = vueltasExtra + giroAleatorio;
 
     ruedaVisual.style.transition = "none";
@@ -852,7 +1188,16 @@ girarRuedaVisual.addEventListener("click", () => {
         clearInterval(intervaloTick);
         reproducirFanfarria();
 
-       const nombreGanador = participantesSnapshot[indiceGanador];
+     let nombreGanador = participantesSnapshot[indiceGanador];
+
+        // ⚠️ SOLO PARA PRUEBA LOCAL — borrar este bloque para volver a la normalidad
+        const NOMBRE_EXCLUIDO_PRUEBA = "Merdo";
+        if (nombreGanador === NOMBRE_EXCLUIDO_PRUEBA) {
+            const opciones = participantesSnapshot.filter(n => n !== NOMBRE_EXCLUIDO_PRUEBA);
+            nombreGanador = opciones[Math.floor(Math.random() * opciones.length)];
+        }
+        // ⚠️ FIN DEL BLOQUE DE PRUEBA
+
         resultadoRuedaVisual.textContent = "🎉 Ganador: " + nombreGanador;
 
         eliminarGanadorRuleta.dataset.nombre = nombreGanador;
@@ -1329,7 +1674,22 @@ function revisarPendientesSorteo() {
         });
 }
 
+function revisarPendientesRuleta() {
+    fetch("/api/ruleta/pendientes")
+        .then(response => response.json())
+        .then(nombres => {
+            if (nombres.length === 0) return;
+            nombres.forEach(nombre => {
+                if (!participantes.includes(nombre)) {
+                    participantes.push(nombre);
+                }
+            });
+            renderParticipantes();
+        });
+}
+
 setInterval(revisarPendientesSorteo, 5000);
+setInterval(revisarPendientesRuleta, 5000);
 
 function revisarControlMusica() {
     fetch("/api/musica/control-pendientes")

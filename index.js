@@ -77,6 +77,9 @@ const Cola = mongoose.model("Cola", colaSchema);
 const clipsRouter = require("./routes/clips");
 app.use("/api/clips", clipsRouter);
 
+const { procesarComandoClip } = require("./services/clipService");
+const { iniciarGrabacion, detenerGrabacion, obtenerRutaGrabacionActual, grabacionEnCurso } = require("./services/recordingService");
+
 const comandoAutoSchema = new mongoose.Schema({
     destino: { type: String, unique: true },
     comando: String,
@@ -589,11 +592,24 @@ async function verificarEnVivo() {
 
         const datos = await respuesta.json();
 
-        const canal = datos.data && datos.data[0];
+       const canal = datos.data && datos.data[0];
+
+        const estabaEnVivo = canalEnVivo;
 
         canalEnVivo = !!(canal && canal.stream && canal.stream.is_live);
 
         console.log("canalEnVivo actualizado a:", canalEnVivo);
+        console.log("DIAGNOSTICO_STREAM_OBJETO:", JSON.stringify(canal && canal.stream));
+
+        if (canalEnVivo && !estabaEnVivo) {
+            console.log("Canal pasó a EN VIVO, iniciando grabación...");
+            iniciarGrabacion(KICK_SLUG);
+        }
+
+        if (!canalEnVivo && estabaEnVivo) {
+            console.log("Canal pasó a offline, deteniendo grabación...");
+            detenerGrabacion();
+        }
 
     } catch (error) {
         console.error("Error consultando estado de Kick:", error.message);
@@ -933,7 +949,39 @@ let usuario = null;
                 }
             }
 
-            if (comando.startsWith("!mr ")) {
+        if (comando.startsWith("!clip")) {
+
+                const argumentoTexto = texto.trim().slice(5).trim();
+
+                if (!grabacionEnCurso()) {
+                    await enviarMensajeChat(`@${usuario} no hay grabación activa en este momento.`);
+                    return;
+                }
+
+                try {
+
+                    const resultado = await procesarComandoClip({
+                        streamer: KICK_SLUG,
+                        usuarioCreador: usuario,
+                        argumentoTexto: argumentoTexto,
+                        rutaGrabacion: obtenerRutaGrabacionActual(),
+                        io: io
+                    });
+
+                    if (!resultado.valido) {
+                        await enviarMensajeChat(`@${usuario} ${resultado.error}`);
+                    } else {
+                        await enviarMensajeChat(`@${usuario} clip creado ✅`);
+                    }
+
+                } catch (error) {
+                    console.log("Error procesando !clip:", error.message);
+                    await enviarMensajeChat(`@${usuario} hubo un error creando el clip.`);
+                }
+
+            }
+
+           if (comando.startsWith("!mr ")) {
 
                 const nombreCancion = texto.trim().slice(4).trim();
 
@@ -974,6 +1022,25 @@ let usuario = null;
                  } catch (error) {
                         console.log("Error en comando !mr:", error.message);
                         await enviarMensajeChat(`@${usuario} hubo un error buscando la canción.`);
+                    }
+
+                }
+
+            }
+
+            if (comando.startsWith("!ruleta ")) {
+
+                if (usuario.toLowerCase() !== "merrd0_ec") {
+                    await enviarMensajeChat(`@${usuario} no tienes permiso para usar este comando.`);
+                } else {
+
+                    const nombreObjetivo = texto.trim().slice(8).trim();
+
+                    if (!nombreObjetivo) {
+                        await enviarMensajeChat(`@${usuario} escribe el nombre después de !ruleta. Ejemplo: !ruleta Jara`);
+                    } else {
+                        participantesPendientesRuleta.push(nombreObjetivo);
+                        await enviarMensajeChat(`${nombreObjetivo} ha ingresado con éxito`);
                     }
 
                 }

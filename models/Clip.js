@@ -6,7 +6,12 @@ const clipSchema = new mongoose.Schema({
     titulo: String,
     duracionSegundos: Number,
     miniatura: String,
-    rutaVideo: String,
+   rutaVideo: String,
+    rutaVideoVertical: String,
+    zoom: { type: Number, default: 100 },
+    offsetX: { type: Number, default: 0 },
+    offsetY: { type: Number, default: 0 },
+    subtituloMarginV: { type: Number, default: 40 },
     vistas: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
     estado: {
