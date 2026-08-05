@@ -1324,6 +1324,7 @@ actualizarEstadoEnVivo();
 setInterval(actualizarEstadoEnVivo, 60000);
 const nuevoAdminUsuario = document.getElementById("nuevoAdminUsuario");
 const nuevoAdminPassword = document.getElementById("nuevoAdminPassword");
+const nuevoAdminUsuarioKick = document.getElementById("nuevoAdminUsuarioKick");
 const btnCrearAdmin = document.getElementById("btnCrearAdmin");
 const listaAdmins = document.getElementById("listaAdmins");
 
@@ -1343,9 +1344,9 @@ function renderAdmins(admins) {
                     : `<button class="eliminarUsuario toggleAdmin" data-id="${admin._id}">Inactivo</button>`)
                 : "");
 
-        const lapiz = admin.esDefault
+       const lapiz = admin.esDefault
             ? ""
-            : `<button class="editarAdminLapiz" data-id="${admin._id}" data-usuario="${admin.usuario}" title="Editar">✏️</button>`;
+            : `<button class="editarAdminLapiz" data-id="${admin._id}" data-usuario="${admin.usuario}" data-usuariokick="${admin.usuarioKick || ""}" title="Editar">✏️</button>`;
 
         listaAdmins.innerHTML += `
             <div class="usuario-item">
@@ -1370,6 +1371,7 @@ btnCrearAdmin.addEventListener("click", () => {
 
     const usuario = nuevoAdminUsuario.value.trim();
     const password = nuevoAdminPassword.value.trim();
+    const usuarioKick = nuevoAdminUsuarioKick.value.trim();
 
     if (usuario === "" || password === "") {
         alert("Escribe usuario y contraseña.");
@@ -1379,7 +1381,7 @@ btnCrearAdmin.addEventListener("click", () => {
     fetch("/api/admins", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usuario: usuario, password: password })
+        body: JSON.stringify({ usuario: usuario, password: password, usuarioKick: usuarioKick })
     })
         .then(response => response.json().then(data => ({ status: response.status, data })))
         .then(({ status, data }) => {
@@ -1392,6 +1394,7 @@ btnCrearAdmin.addEventListener("click", () => {
             renderAdmins(data);
             nuevoAdminUsuario.value = "";
             nuevoAdminPassword.value = "";
+            nuevoAdminUsuarioKick.value = "";
 
         });
 
@@ -1422,6 +1425,7 @@ document.addEventListener("click", (e) => {
 const modalEditarAdmin = document.getElementById("modalEditarAdmin");
 const editarAdminUsuarioInput = document.getElementById("editarAdminUsuarioInput");
 const editarAdminPasswordInput = document.getElementById("editarAdminPasswordInput");
+const editarAdminUsuarioKickInput = document.getElementById("editarAdminUsuarioKickInput");
 const guardarEdicionAdmin = document.getElementById("guardarEdicionAdmin");
 const cancelarEdicionAdmin = document.getElementById("cancelarEdicionAdmin");
 
@@ -1429,11 +1433,12 @@ let idAdminEditando = null;
 
 document.addEventListener("click", (e) => {
 
-    if (e.target.classList.contains("editarAdminLapiz")) {
+   if (e.target.classList.contains("editarAdminLapiz")) {
 
         idAdminEditando = e.target.dataset.id;
         editarAdminUsuarioInput.value = e.target.dataset.usuario;
         editarAdminPasswordInput.value = "";
+        editarAdminUsuarioKickInput.value = e.target.dataset.usuariokick || "";
 
         modalEditarAdmin.style.display = "flex";
 
@@ -1456,10 +1461,12 @@ guardarEdicionAdmin.addEventListener("click", () => {
         return;
     }
 
+   const nuevoUsuarioKick = editarAdminUsuarioKickInput.value.trim();
+
     fetch(`/api/admins/${idAdminEditando}/editar`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usuario: nuevoUsuario, password: nuevaPassword })
+        body: JSON.stringify({ usuario: nuevoUsuario, password: nuevaPassword, usuarioKick: nuevoUsuarioKick })
     })
         .then(response => response.json().then(data => ({ status: response.status, data })))
         .then(({ status, data }) => {

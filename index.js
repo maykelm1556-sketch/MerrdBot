@@ -208,6 +208,7 @@ const Comunidad = mongoose.model("Comunidad", comunidadSchema);
 const adminSchema = new mongoose.Schema({
     usuario: String,
     password: String,
+    usuarioKick: String,
     creado_en: Date,
     esDefault: { type: Boolean, default: false },
     activo: { type: Boolean, default: true }
@@ -1059,7 +1060,18 @@ let usuario = null;
                 console.log("✅ Agregado a pendientes de Ruleta:", usuario);
             }
 
-          if (esMod && comando.startsWith("!add ")) {
+         if (esMod && comando.startsWith("!add ")) {
+
+                const adminAutorizado = await Admin.findOne({
+                    usuarioKick: { $regex: new RegExp(`^${usuario.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+                    activo: true
+                });
+
+                if (!adminAutorizado) {
+
+                    await enviarMensajeChat(`@${usuario} no tienes permiso para usar este comando.`);
+
+                } else {
 
                 const partes = texto.trim().split(/\s+/);
                 const cantidad = parseInt(partes[1]);
@@ -1081,9 +1093,11 @@ let usuario = null;
                         const economiaActualizada = await Usuario.find();
                         io.emit("economia-actualizada", economiaActualizada);
 
-                        await enviarMensajeChat(`@${usuario} se agregaron ${cantidad} puntos a ${usuarioEconomia.usuario}. Ahora tiene ${usuarioEconomia.puntos} pts.`);
+                       await enviarMensajeChat(`@${usuario} se agregaron ${cantidad} puntos a ${usuarioEconomia.usuario}. Ahora tiene ${usuarioEconomia.puntos} pts.`);
 
                     }
+
+                }
 
                 }
 
@@ -1204,6 +1218,7 @@ app.patch("/api/admins/:id/editar", async (req, res) => {
     const id = req.params.id;
     const nuevoUsuario = req.body.usuario;
     const nuevaPassword = req.body.password;
+    const nuevoUsuarioKick = req.body.usuarioKick;
 
     const admin = await Admin.findById(id);
 
@@ -1219,6 +1234,7 @@ app.patch("/api/admins/:id/editar", async (req, res) => {
 
     admin.usuario = nuevoUsuario.trim();
     admin.password = nuevaPassword.trim();
+    admin.usuarioKick = (nuevoUsuarioKick || "").trim();
 
     await admin.save();
 
@@ -1230,6 +1246,7 @@ app.post("/api/admins", async (req, res) => {
 
     const usuario = req.body.usuario;
     const password = req.body.password;
+    const usuarioKick = req.body.usuarioKick;
 
     if (!usuario || usuario.trim() === "" || !password || password.trim() === "") {
         res.status(400).json({ error: "Falta usuario o contraseña." });
@@ -1246,6 +1263,7 @@ app.post("/api/admins", async (req, res) => {
     const nuevoAdmin = new Admin({
         usuario: usuario.trim(),
         password: password.trim(),
+        usuarioKick: (usuarioKick || "").trim(),
         creado_en: new Date(),
         esDefault: false,
         activo: true
