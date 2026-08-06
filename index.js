@@ -2,6 +2,8 @@ const express = require("express");
 const WebSocket = require("ws");
 const crypto = require("crypto");
 require("dotenv").config();
+const ROL = process.env.ROL || "panel";
+console.log(`Iniciando MerrdBot en modo: ${ROL}`);
 const dns = require("dns");
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 const mongoose = require("mongoose");
@@ -601,15 +603,18 @@ async function verificarEnVivo() {
 
         console.log("canalEnVivo actualizado a:", canalEnVivo);
         console.log("DIAGNOSTICO_STREAM_OBJETO:", JSON.stringify(canal && canal.stream));
+if (ROL === "grabacion") {
 
-        if (canalEnVivo && !estabaEnVivo) {
-            console.log("Canal pasó a EN VIVO, iniciando grabación...");
-            iniciarGrabacion(KICK_SLUG);
-        }
+            if (canalEnVivo && !estabaEnVivo) {
+                console.log("Canal pasó a EN VIVO, iniciando grabación...");
+                iniciarGrabacion(KICK_SLUG);
+            }
 
-        if (!canalEnVivo && estabaEnVivo) {
-            console.log("Canal pasó a offline, deteniendo grabación...");
-            detenerGrabacion();
+            if (!canalEnVivo && estabaEnVivo) {
+                console.log("Canal pasó a offline, deteniendo grabación...");
+                detenerGrabacion();
+            }
+
         }
 
     } catch (error) {
@@ -702,7 +707,9 @@ for (const usuario of usuariosActivos) {
 
 }
 
-setInterval(sumarPorTiempoEnVivo, 60000);
+if (ROL === "panel") {
+    setInterval(sumarPorTiempoEnVivo, 60000);
+}
 
 app.post("/api/musica/agregar", async (req, res) => {
 
@@ -914,17 +921,17 @@ let usuario = null;
 
             console.log(`${usuario}: ${texto}`);
 
-            if (canalEnVivo) {
+         if (canalEnVivo && ROL === "panel") {
                 await registrarActividad(usuario);
             }
 
         const comando = texto.trim().toLowerCase();
 
-            if (comando === "!link") {
+            if (ROL === "panel" && comando === "!link") {
                 await enviarMensajeChat(`@${usuario} Mira el panel completo aquí: https://merrdbot.onrender.com`);
             }
 
-            if (comando === "!puntos" || comando === "!nivel" || comando === "!watchtime") {
+           if (ROL === "panel" && (comando === "!puntos" || comando === "!nivel" || comando === "!watchtime")) {
 
                 const datosUsuario = await Comunidad.findOne({ usuario: usuario });
 
@@ -950,7 +957,7 @@ let usuario = null;
                 }
             }
 
-        if (comando.startsWith("!clip")) {
+        if (ROL === "grabacion" && comando.startsWith("!clip")) {
 
                 const argumentoTexto = texto.trim().slice(5).trim();
 
@@ -982,7 +989,7 @@ let usuario = null;
 
             }
 
-           if (comando.startsWith("!mr ")) {
+          if (ROL === "panel" && comando.startsWith("!mr ")) {
 
                 const nombreCancion = texto.trim().slice(4).trim();
 
@@ -1029,7 +1036,7 @@ let usuario = null;
 
             }
 
-            if (comando.startsWith("!ruleta ")) {
+           if (ROL === "panel" && comando.startsWith("!ruleta ")) {
 
                 if (usuario.toLowerCase() !== "merrd0_ec") {
                     await enviarMensajeChat(`@${usuario} no tienes permiso para usar este comando.`);
@@ -1050,17 +1057,17 @@ let usuario = null;
 
             console.log("Comparando comando:", JSON.stringify(comando), "| config Sorteos:", JSON.stringify(comandoAutoSorteos), "| config Ruleta:", JSON.stringify(comandoAutoRuleta));
 
-            if (comandoAutoSorteos.activo && comandoAutoSorteos.comando && comando === comandoAutoSorteos.comando) {
+           if (ROL === "panel" && comandoAutoSorteos.activo && comandoAutoSorteos.comando && comando === comandoAutoSorteos.comando) {
                 participantesPendientesSorteo.push(usuario);
                 console.log("✅ Agregado a pendientes de Sorteos:", usuario);
             }
 
-            if (comandoAutoRuleta.activo && comandoAutoRuleta.comando && comando === comandoAutoRuleta.comando) {
+           if (ROL === "panel" && comandoAutoRuleta.activo && comandoAutoRuleta.comando && comando === comandoAutoRuleta.comando) {
                 participantesPendientesRuleta.push(usuario);
                 console.log("✅ Agregado a pendientes de Ruleta:", usuario);
             }
 
-         if (esMod && comando.startsWith("!add ")) {
+        if (ROL === "panel" && esMod && comando.startsWith("!add ")) {
 
                 const adminAutorizado = await Admin.findOne({
                     usuarioKick: { $regex: new RegExp(`^${usuario.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
@@ -1103,7 +1110,7 @@ let usuario = null;
 
             }
 
-            if (esMod) {
+            if (ROL === "panel" && esMod) {
 
                 if (comando === "!mpausar") {
                     comandosMusicaPendientes.push({ accion: "pausar" });
