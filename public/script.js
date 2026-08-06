@@ -1344,9 +1344,7 @@ function renderAdmins(admins) {
                     : `<button class="eliminarUsuario toggleAdmin" data-id="${admin._id}">Inactivo</button>`)
                 : "");
 
-       const lapiz = admin.esDefault
-            ? ""
-            : `<button class="editarAdminLapiz" data-id="${admin._id}" data-usuario="${admin.usuario}" data-usuariokick="${admin.usuarioKick || ""}" title="Editar">✏️</button>`;
+       const lapiz = `<button class="editarAdminLapiz" data-id="${admin._id}" data-usuario="${admin.usuario}" data-usuariokick="${admin.usuarioKick || ""}" title="Editar">✏️</button>`;
 
         listaAdmins.innerHTML += `
             <div class="usuario-item">
