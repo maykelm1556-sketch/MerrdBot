@@ -89,6 +89,31 @@ router.post("/:id/recortar", async (req, res) => {
 router.post("/:id/reposicionar", async (req, res) => {
 
     const id = req.params.id;
+
+    if (ROL === "panel") {
+
+        try {
+
+            const respuestaAws = await fetch(`${process.env.AWS_INTERNAL_URL}/api/clips/${id}/reposicionar`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(req.body)
+            });
+
+            const textoCrudo = await respuestaAws.text();
+            const textoLimpio = textoCrudo.split(process.env.AWS_INTERNAL_URL).join("");
+
+            res.status(respuestaAws.status).set("Content-Type", "application/json").send(textoLimpio);
+
+        } catch (error) {
+            console.log("Error reenviando reposicionar a AWS:", error.message);
+            res.status(500).json({ error: "Error interno al reposicionar el clip." });
+        }
+
+        return;
+
+    }
+
     const zoom = parseFloat(req.body.zoom);
     const offsetX = parseFloat(req.body.offsetX);
     const offsetY = parseFloat(req.body.offsetY);
