@@ -1805,3 +1805,68 @@ label[for="duracionGiroVisual"] {
     color: #666;
     font-size: 13px;
 }
+/* ---------- INTRO RESPONSIVE (MOBILE) ---------- */
+@media (max-width: 640px) {
+
+    #introStage {
+        position: static;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        width: 100%;
+        height: auto;
+        gap: 24px;
+        padding: 30px 16px;
+        box-sizing: border-box;
+    }
+
+    .introGlow {
+        left: 50%;
+        top: 90px;
+        width: 380px;
+        height: 380px;
+    }
+
+    .introLamp {
+        position: static;
+        transform: none;
+    }
+
+    .introLampShade {
+        width: 100px;
+        height: 50px;
+    }
+
+    .introLampPole {
+        height: 65px;
+    }
+
+    .introLampBase {
+        width: 70px;
+    }
+
+    #introCard {
+        position: static;
+        transform: none;
+        width: 100%;
+        max-width: 320px;
+        padding: 22px 18px;
+    }
+
+    #introHint {
+        text-align: center;
+        padding: 0 20px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 380px) {
+    #introCard {
+        max-width: 100%;
+    }
+
+    #introCard h2 {
+        font-size: 19px;
+    }
+}
