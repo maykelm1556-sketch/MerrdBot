@@ -1550,6 +1550,20 @@ function cargarColaMusica() {
             colaMusica = data;
             renderColaMusica();
 
+            const musicaVaciaImagen = document.getElementById("musicaVaciaImagen");
+            const reproductorYoutubeContenedor = document.getElementById("reproductorYoutubeContenedor");
+            const botonActivarSonido = document.getElementById("botonActivarSonido");
+
+            if (colaMusica.length === 0) {
+                musicaVaciaImagen.style.display = "block";
+                reproductorYoutubeContenedor.style.display = "none";
+                botonActivarSonido.style.display = "none";
+            } else {
+                musicaVaciaImagen.style.display = "none";
+                reproductorYoutubeContenedor.style.display = "block";
+                botonActivarSonido.style.display = "inline-block";
+            }
+
             if (!videoActualId && colaMusica.length > 0 && reproductorYT && reproductorYT.loadVideoById) {
                 reproducirPrimeraCancion();
             }
