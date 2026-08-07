@@ -1806,3 +1806,67 @@ btnSonidoOviedo.addEventListener("click", () => {
     const audio = new Audio("/oviedo-sound.mp3");
     audio.play();
 });
+const introBienvenida = document.getElementById("introBienvenida");
+const introStage = document.getElementById("introStage");
+const introLampToggle = document.getElementById("introLampToggle");
+
+if (sessionStorage.getItem("introVista") === "true") {
+    introBienvenida.style.display = "none";
+} else {
+    fetch("/api/viewer/me")
+        .then(response => {
+            if (response.ok) {
+                cerrarIntro();
+            }
+        })
+        .catch(() => {});
+}
+
+introLampToggle.addEventListener("click", () => {
+    introStage.classList.toggle("on");
+});
+
+function cerrarIntro() {
+    sessionStorage.setItem("introVista", "true");
+    introBienvenida.style.display = "none";
+}
+
+const btnIntroContinuar = document.getElementById("btnIntroContinuar");
+btnIntroContinuar.addEventListener("click", cerrarIntro);
+
+const btnIntroAdminLogin = document.getElementById("btnIntroAdminLogin");
+const introAdminUsuario = document.getElementById("introAdminUsuario");
+const introAdminPassword = document.getElementById("introAdminPassword");
+const introAdminError = document.getElementById("introAdminError");
+const introAdminExito = document.getElementById("introAdminExito");
+
+btnIntroAdminLogin.addEventListener("click", () => {
+
+    const usuario = introAdminUsuario.value.trim();
+    const password = introAdminPassword.value.trim();
+
+    fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usuario: usuario, password: password })
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Credenciales incorrectas");
+            }
+            return response.json();
+        })
+        .then(data => {
+            localStorage.setItem("merrdbot_admin_usuario", usuario);
+            localStorage.setItem("merrdbot_admin_password", password);
+            localStorage.setItem("merrdbot_admin_esDefault", data.esDefault ? "true" : "false");
+            activarModoAdmin(usuario);
+            introAdminError.style.display = "none";
+            introAdminExito.style.display = "block";
+        })
+        .catch(() => {
+            introAdminExito.style.display = "none";
+            introAdminError.style.display = "block";
+        });
+
+});
