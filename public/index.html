@@ -7,8 +7,50 @@
 
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<div id="introBienvenida">
+    <div id="introStage">
 
+        <div class="introGlow"></div>
+
+        <div class="introLamp" id="introLampToggle">
+            <div class="introLampShade"></div>
+            <div class="introLampPole"></div>
+            <div class="introLampBase"></div>
+            <div class="introCord">
+                <div class="introCordKnob"></div>
+            </div>
+        </div>
+
+        <div id="introCard">
+
+            <h2>Registrarse</h2>
+
+            <div id="introAdminBloque">
+
+                <label>Admin:</label>
+
+                <input type="text" id="introAdminUsuario" placeholder="Usuario">
+                <input type="password" id="introAdminPassword" placeholder="Contraseña">
+
+                <button id="btnIntroAdminLogin">Ingresar</button>
+
+                <p id="introAdminError" style="display:none;">Usuario o contraseña incorrectos.</p>
+                <p id="introAdminExito" style="display:none;">✅ Inicio de sesión correcto</p>
+
+            </div>
+
+            <label>Viewers:</label>
+
+            <a href="/auth/kick/viewer" id="btnIntroViewerLogin">Iniciar sesión con Kick</a>
+
+            <button id="btnIntroContinuar">Continuar sin iniciar sesión</button>
+
+        </div>
+
+    </div>
+
+    <p id="introHint">Haz clic en el cordón de la lámpara para encender</p>
+</div>
 <div class="container">
 
     <div id="menuAdminContenedor">
