@@ -12,6 +12,7 @@ const clipSchema = new mongoose.Schema({
     offsetX: { type: Number, default: 0 },
     offsetY: { type: Number, default: 0 },
     subtituloMarginV: { type: Number, default: 40 },
+    formato: { type: String, enum: ["normal", "difuminado", "camarajuego"], default: "normal" },
     vistas: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
     estado: {

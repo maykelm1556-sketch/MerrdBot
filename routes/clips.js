@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const Clip = require("../models/Clip");
-const { recortarClipExistente, generarVersionVerticalPersonalizada, generarSubtitulos, quemarSubtitulos } = require("../services/clipService");
+const { recortarClipExistente, generarVersionVerticalPersonalizada, generarVersionVerticalFondoDifuminado, generarVersionCamaraJuego, generarSubtitulos, quemarSubtitulos, convertirClipAUrlsAbsolutas } = require("../services/clipService");
 const path = require("path");
 const fs = require("fs");
 
 router.get("/", async (req, res) => {
     const clips = await Clip.find().sort({ creado_en: -1 });
-    res.json(clips);
+    res.json(clips.map(convertirClipAUrlsAbsolutas));
 });
 
 router.patch("/:id", async (req, res) => {
@@ -19,14 +19,14 @@ router.patch("/:id", async (req, res) => {
     if (req.body.miniatura !== undefined) cambios.miniatura = req.body.miniatura;
     if (req.body.estado !== undefined) cambios.estado = req.body.estado;
 
-    const clip = await Clip.findByIdAndUpdate(id, cambios, { new: true });
+   const clip = await Clip.findByIdAndUpdate(id, cambios, { new: true });
 
     if (!clip) {
         res.status(404).json({ error: "Clip no encontrado." });
         return;
     }
 
-    res.json(clip);
+    res.json(convertirClipAUrlsAbsolutas(clip));
 
 });
 
@@ -50,7 +50,7 @@ router.post("/:id/recortar", async (req, res) => {
             return;
         }
 
-        res.json(resultado.clip);
+        res.json(convertirClipAUrlsAbsolutas(resultado.clip));
 
     } catch (error) {
         console.log("Error recortando clip:", error.message);
@@ -109,11 +109,70 @@ router.post("/:id/reposicionar", async (req, res) => {
 
         await clip.save();
 
-        res.json(clip);
+        res.json(convertirClipAUrlsAbsolutas(clip));
 
     } catch (error) {
         console.log("Error reposicionando clip:", error.message);
         res.status(500).json({ error: "Error interno al reposicionar el clip." });
+    }
+
+});
+
+router.post("/:id/formato", async (req, res) => {
+
+    const id = req.params.id;
+    const formato = req.body.formato;
+
+    if (!["normal", "difuminado", "camarajuego"].includes(formato)) {
+        res.status(400).json({ error: "Formato inválido." });
+        return;
+    }
+
+    const clip = await Clip.findById(id);
+
+    if (!clip) {
+        res.status(404).json({ error: "Clip no encontrado." });
+        return;
+    }
+
+    try {
+
+        const rutaMp4Original = path.join(__dirname, "..", "public", clip.rutaVideo);
+        const rutaVerticalActual = path.join(__dirname, "..", "public", clip.rutaVideoVertical);
+
+        if (formato === "normal") {
+            await generarVersionVerticalPersonalizada(rutaMp4Original, rutaVerticalActual, { zoom: clip.zoom || 100, offsetX: clip.offsetX || 0, offsetY: clip.offsetY || 0 });
+        } else if (formato === "difuminado") {
+            await generarVersionVerticalFondoDifuminado(rutaMp4Original, rutaVerticalActual);
+        } else if (formato === "camarajuego") {
+            await generarVersionCamaraJuego(rutaMp4Original, rutaVerticalActual);
+        }
+
+        try {
+
+            const carpetaClips = path.join(__dirname, "..", "public", "clips");
+            const nombreBase = path.basename(clip.rutaVideoVertical, ".mp4");
+            const rutaSrt = path.join(carpetaClips, `${nombreBase}.srt`);
+            const rutaVerticalConSubs = path.join(carpetaClips, `${nombreBase}_subs.mp4`);
+
+            await generarSubtitulos(rutaVerticalActual, rutaSrt);
+            await quemarSubtitulos(rutaVerticalActual, rutaSrt, rutaVerticalConSubs, clip.subtituloMarginV);
+
+            fs.unlinkSync(rutaVerticalActual);
+            fs.renameSync(rutaVerticalConSubs, rutaVerticalActual);
+
+        } catch (errorSubs) {
+            console.log("No se pudieron regenerar subtítulos tras cambiar formato:", errorSubs.message);
+        }
+
+       clip.formato = formato;
+        await clip.save();
+
+        res.json(convertirClipAUrlsAbsolutas(clip));
+
+    } catch (error) {
+        console.log("Error cambiando formato del clip:", error.message);
+        res.status(500).json({ error: "Error interno al cambiar el formato." });
     }
 
 });
