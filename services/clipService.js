@@ -202,6 +202,104 @@ function generarVersionVerticalPersonalizada(rutaVideo, rutaSalida, { zoom, offs
 
 }
 
+function generarVersionVerticalFondoDifuminado(rutaVideo, rutaSalida) {
+
+    return new Promise((resolve, reject) => {
+
+        const filtro = "[0:v]scale=1080:1920,boxblur=40:20[fondo];[0:v]scale=1080:-2[frente];[fondo][frente]overlay=(W-w)/2:(H-h)/2";
+
+        const args = [
+            "-i", rutaVideo,
+            "-filter_complex", filtro,
+            "-c:a", "copy",
+            "-y",
+            rutaSalida
+        ];
+
+        const proceso = spawn("ffmpeg", args);
+
+        let errorSalida = "";
+
+        proceso.stderr.on("data", (dato) => {
+            errorSalida += dato.toString();
+        });
+
+        proceso.on("close", (codigo) => {
+            if (codigo === 0) {
+                resolve({ ok: true, rutaSalida: rutaSalida });
+            } else {
+                reject(new Error(`FFmpeg (fondo difuminado) terminó con código ${codigo}: ${errorSalida.slice(-500)}`));
+            }
+        });
+
+        proceso.on("error", (error) => {
+            reject(new Error(`No se pudo ejecutar FFmpeg (fondo difuminado): ${error.message}`));
+        });
+
+    });
+
+}
+
+function generarVersionCamaraJuego(rutaVideo, rutaSalida) {
+
+    return new Promise((resolve, reject) => {
+
+        const camX = 0;
+        const camY = 580;
+        const camAncho = 845;
+        const camAlto = 500;
+
+        const filtro =
+            `[0:v]crop=${camAncho}:${camAlto}:${camX}:${camY},scale=1080:960[camara];` +
+            `[0:v]crop=iw:ih-${camAlto}:0:0,scale=1080:960[juego];` +
+            `[camara][juego]vstack=inputs=2`;
+
+        const args = [
+            "-i", rutaVideo,
+            "-filter_complex", filtro,
+            "-c:a", "copy",
+            "-y",
+            rutaSalida
+        ];
+
+        const proceso = spawn("ffmpeg", args);
+
+        let errorSalida = "";
+
+        proceso.stderr.on("data", (dato) => {
+            errorSalida += dato.toString();
+        });
+
+        proceso.on("close", (codigo) => {
+            if (codigo === 0) {
+                resolve({ ok: true, rutaSalida: rutaSalida });
+            } else {
+                reject(new Error(`FFmpeg (cámara+juego) terminó con código ${codigo}: ${errorSalida.slice(-500)}`));
+            }
+        });
+
+        proceso.on("error", (error) => {
+            reject(new Error(`No se pudo ejecutar FFmpeg (cámara+juego): ${error.message}`));
+        });
+
+    });
+
+}
+
+function convertirClipAUrlsAbsolutas(clipDoc) {
+
+    const clip = clipDoc.toObject ? clipDoc.toObject() : clipDoc;
+    const base = process.env.CLIP_BASE_URL || "";
+
+    return {
+        ...clip,
+        miniatura: clip.miniatura ? base + clip.miniatura : clip.miniatura,
+        rutaVideo: clip.rutaVideo ? base + clip.rutaVideo : clip.rutaVideo,
+        rutaVideoVertical: clip.rutaVideoVertical ? base + clip.rutaVideoVertical : clip.rutaVideoVertical
+    };
+
+}
+
 const RUTA_MODELO_WHISPER = path.join(__dirname, "..", "whisper-models", "ggml-small.bin");
 
 function generarSubtitulos(rutaVideo, rutaSrtSalida) {
@@ -339,7 +437,7 @@ async function procesarComandoClip({ streamer, usuarioCreador, argumentoTexto, r
     await nuevoClip.save();
 
     if (io) {
-        io.emit("clip-nuevo", nuevoClip);
+        io.emit("clip-nuevo", convertirClipAUrlsAbsolutas(nuevoClip));
     }
 
     return { valido: true, clip: nuevoClip };
@@ -405,4 +503,4 @@ fs.unlinkSync(rutaMp4Actual);
     return { valido: true, clip: clip };
 
 }
-module.exports = { cortarClip, generarMiniatura, generarVersionVertical, generarVersionVerticalPersonalizada, procesarComandoClip, recortarClipExistente, generarSubtitulos, quemarSubtitulos };
+module.exports = { cortarClip, generarMiniatura, generarVersionVertical, generarVersionVerticalPersonalizada, generarVersionVerticalFondoDifuminado, generarVersionCamaraJuego, procesarComandoClip, recortarClipExistente, generarSubtitulos, quemarSubtitulos, convertirClipAUrlsAbsolutas };

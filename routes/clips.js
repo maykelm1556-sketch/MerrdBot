@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
 const Clip = require("../models/Clip");
 const { recortarClipExistente, generarVersionVerticalPersonalizada, generarVersionVerticalFondoDifuminado, generarVersionCamaraJuego, generarSubtitulos, quemarSubtitulos, convertirClipAUrlsAbsolutas } = require("../services/clipService");
@@ -7,9 +8,9 @@ const fs = require("fs");
 
 router.get("/", async (req, res) => {
     const clips = await Clip.find().sort({ creado_en: -1 });
+    console.log("DIAGNOSTICO_CLIPS - cantidad encontrada:", clips.length, "| conectado a DB:", mongoose.connection.name);
     res.json(clips.map(convertirClipAUrlsAbsolutas));
 });
-
 router.patch("/:id", async (req, res) => {
 
     const id = req.params.id;
