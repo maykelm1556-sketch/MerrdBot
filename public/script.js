@@ -196,6 +196,7 @@ function renderClips() {
                <button class="editarUsuario renombrarClip" data-id="${clip._id}">✏️ Renombrar</button>
              <button class="editarUsuario recortarClip" data-id="${clip._id}" data-duracion="${clip.duracionSegundos}">✂️ Recortar más</button>
                 <button class="editarUsuario editarPosicionClip" data-id="${clip._id}" data-zoom="${clip.zoom || 100}" data-offsetx="${clip.offsetX || 0}" data-offsety="${clip.offsetY || 0}">🖼️ Editar posición</button>
+                <button class="editarUsuario abrirFormatoClip" data-id="${clip._id}">🎨 Formato</button>
               <a href="${clip.rutaVideoVertical}" download class="editarUsuario" style="text-decoration:none; display:inline-block;">⬇️ Descargar</a>
                 <button class="eliminarUsuario eliminarClip" data-id="${clip._id}">🗑️ Eliminar</button>
             </div>
@@ -446,6 +447,63 @@ cancelarEdicionPosicion.addEventListener("click", () => {
     modalEditarPosicion.style.display = "none";
     idClipEditandoPosicion = null;
 });
+
+const modalFormato = document.getElementById("modalFormato");
+const cancelarFormato = document.getElementById("cancelarFormato");
+const formatoNormalBtn = document.getElementById("formatoNormalBtn");
+const formatoDifuminadoBtn = document.getElementById("formatoDifuminadoBtn");
+const formatoCamaraJuegoBtn = document.getElementById("formatoCamaraJuegoBtn");
+
+let idClipEligiendoFormato = null;
+
+document.addEventListener("click", (e) => {
+
+    if (e.target.classList.contains("abrirFormatoClip")) {
+        idClipEligiendoFormato = e.target.dataset.id;
+        modalFormato.style.display = "flex";
+    }
+
+});
+
+cancelarFormato.addEventListener("click", () => {
+    modalFormato.style.display = "none";
+    idClipEligiendoFormato = null;
+});
+
+function aplicarFormato(formato) {
+
+    if (!idClipEligiendoFormato) return;
+
+    modalFormato.style.display = "none";
+    alert("Aplicando formato, esto puede tardar un momento...");
+
+    fetch(`/api/clips/${idClipEligiendoFormato}/formato`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ formato })
+    })
+        .then(response => response.json().then(data => ({ status: response.status, data })))
+        .then(({ status, data }) => {
+
+            if (status !== 200) {
+                alert(data.error || "No se pudo cambiar el formato.");
+                return;
+            }
+
+            const index = misClips.findIndex(c => c._id === idClipEligiendoFormato);
+            if (index !== -1) misClips[index] = data;
+            renderClips();
+
+            alert("Formato aplicado.");
+            idClipEligiendoFormato = null;
+
+        });
+
+}
+
+formatoNormalBtn.addEventListener("click", () => aplicarFormato("normal"));
+formatoDifuminadoBtn.addEventListener("click", () => aplicarFormato("difuminado"));
+formatoCamaraJuegoBtn.addEventListener("click", () => aplicarFormato("camarajuego"));
 
 guardarEdicionPosicion.addEventListener("click", () => {
 
