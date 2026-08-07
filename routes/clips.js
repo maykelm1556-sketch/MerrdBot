@@ -46,8 +46,10 @@ router.post("/:id/recortar", async (req, res) => {
                 body: JSON.stringify(req.body)
             });
 
-            const datos = await respuestaAws.json();
-            res.status(respuestaAws.status).json(datos);
+            const textoCrudo = await respuestaAws.text();
+            const textoLimpio = textoCrudo.split(process.env.AWS_INTERNAL_URL).join("");
+
+            res.status(respuestaAws.status).set("Content-Type", "application/json").send(textoLimpio);
 
         } catch (error) {
             console.log("Error reenviando recorte a AWS:", error.message);
