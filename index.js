@@ -79,6 +79,30 @@ const Cola = mongoose.model("Cola", colaSchema);
 const clipsRouter = require("./routes/clips");
 app.use("/api/clips", clipsRouter);
 
+app.get("/clips/:archivo", async (req, res) => {
+
+    const archivo = req.params.archivo;
+    const urlAws = `${process.env.AWS_INTERNAL_URL}/clips/${archivo}`;
+
+    try {
+
+        const respuestaAws = await fetch(urlAws);
+
+        if (!respuestaAws.ok) {
+            res.status(404).send("Archivo no encontrado.");
+            return;
+        }
+
+        res.set("Content-Type", respuestaAws.headers.get("content-type") || "application/octet-stream");
+        respuestaAws.body.pipe ? respuestaAws.body.pipe(res) : res.send(Buffer.from(await respuestaAws.arrayBuffer()));
+
+    } catch (error) {
+        console.log("Error en proxy de clips:", error.message);
+        res.status(500).send("Error obteniendo el archivo.");
+    }
+
+});
+
 const { procesarComandoClip } = require("./services/clipService");
 const { iniciarGrabacion, detenerGrabacion, obtenerRutaGrabacionActual, grabacionEnCurso } = require("./services/recordingService");
 
