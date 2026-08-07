@@ -5,6 +5,7 @@ const Clip = require("../models/Clip");
 const { recortarClipExistente, generarVersionVerticalPersonalizada, generarVersionVerticalFondoDifuminado, generarVersionCamaraJuego, generarSubtitulos, quemarSubtitulos, convertirClipAUrlsAbsolutas } = require("../services/clipService");
 const path = require("path");
 const fs = require("fs");
+const ROL = process.env.ROL || "panel";
 
 router.get("/", async (req, res) => {
     const clips = await Clip.find().sort({ creado_en: -1 });
@@ -34,6 +35,29 @@ router.patch("/:id", async (req, res) => {
 router.post("/:id/recortar", async (req, res) => {
 
     const id = req.params.id;
+
+    if (ROL === "panel") {
+
+        try {
+
+            const respuestaAws = await fetch(`${process.env.AWS_INTERNAL_URL}/api/clips/${id}/recortar`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(req.body)
+            });
+
+            const datos = await respuestaAws.json();
+            res.status(respuestaAws.status).json(datos);
+
+        } catch (error) {
+            console.log("Error reenviando recorte a AWS:", error.message);
+            res.status(500).json({ error: "Error interno al recortar el clip." });
+        }
+
+        return;
+
+    }
+
     const inicioSegundos = parseFloat(req.body.inicioSegundos);
     const duracionSegundos = parseFloat(req.body.duracionSegundos);
 
