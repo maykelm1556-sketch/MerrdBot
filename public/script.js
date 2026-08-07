@@ -1786,3 +1786,9 @@ modoRuletaBtn.addEventListener("click", () => {
     panelRuleta.style.display = "block";
     panelInstantaneo.style.display = "none";
 });
+const btnSonidoOviedo = document.getElementById("btnSonidoOviedo");
+
+btnSonidoOviedo.addEventListener("click", () => {
+    const audio = new Audio("/oviedo-sound.mp3");
+    audio.play();
+});
