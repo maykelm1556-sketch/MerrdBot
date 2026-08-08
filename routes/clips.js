@@ -148,7 +148,10 @@ router.post("/:id/reposicionar", async (req, res) => {
             const rutaSrt = path.join(carpetaClips, `${path.basename(clip.rutaVideoVertical, ".mp4")}.srt`);
             const rutaVerticalConSubs = path.join(carpetaClips, `${path.basename(clip.rutaVideoVertical, ".mp4")}_subs.mp4`);
 
-        await generarSubtitulos(rutaVerticalActual, rutaSrt);
+            if (!fs.existsSync(rutaSrt)) {
+                await generarSubtitulos(rutaVerticalActual, rutaSrt);
+            }
+
             await quemarSubtitulos(rutaVerticalActual, rutaSrt, rutaVerticalConSubs, subtituloMarginV);
 
             fs.unlinkSync(rutaVerticalActual);
@@ -233,12 +236,15 @@ router.post("/:id/formato", async (req, res) => {
 
         try {
 
-            const carpetaClips = path.join(__dirname, "..", "public", "clips");
+        const carpetaClips = path.join(__dirname, "..", "public", "clips");
             const nombreBase = path.basename(clip.rutaVideoVertical, ".mp4");
             const rutaSrt = path.join(carpetaClips, `${nombreBase}.srt`);
             const rutaVerticalConSubs = path.join(carpetaClips, `${nombreBase}_subs.mp4`);
 
-            await generarSubtitulos(rutaVerticalActual, rutaSrt);
+            if (!fs.existsSync(rutaSrt)) {
+                await generarSubtitulos(rutaVerticalActual, rutaSrt);
+            }
+
             await quemarSubtitulos(rutaVerticalActual, rutaSrt, rutaVerticalConSubs, clip.subtituloMarginV);
 
             fs.unlinkSync(rutaVerticalActual);

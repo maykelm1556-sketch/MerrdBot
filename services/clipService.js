@@ -206,7 +206,7 @@ function generarVersionVerticalFondoDifuminado(rutaVideo, rutaSalida) {
 
     return new Promise((resolve, reject) => {
 
-        const filtro = "[0:v]scale=1080:1920,boxblur=40:20[fondo];[0:v]scale=1080:-2[frente];[fondo][frente]overlay=(W-w)/2:(H-h)/2";
+       const filtro = "[0:v]scale=1080:1920,boxblur=40:20,setsar=1[fondo];[0:v]scale=1080:-2,setsar=1[frente];[fondo][frente]overlay=(W-w)/2:(H-h)/2,setsar=1";
 
         const args = [
             "-i", rutaVideo,
@@ -349,8 +349,9 @@ function quemarSubtitulos(rutaVideoEntrada, rutaSrt, rutaVideoSalida, marginV) {
 
         const args = [
             "-i", rutaVideoEntrada,
-            "-vf", `subtitles=${srtRelativo}:force_style=${estilo}`,
+            "-vf", `subtitles=${srtRelativo}:force_style='${estilo}'`,
             "-c:a", "copy",
+            "-preset", "veryfast",
             "-y", rutaVideoSalida
         ];
 
