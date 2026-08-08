@@ -179,6 +179,31 @@ router.post("/:id/reposicionar", async (req, res) => {
 router.post("/:id/formato", async (req, res) => {
 
     const id = req.params.id;
+
+    if (ROL === "panel") {
+
+        try {
+
+            const respuestaAws = await fetch(`${process.env.AWS_INTERNAL_URL}/api/clips/${id}/formato`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(req.body)
+            });
+
+            const textoCrudo = await respuestaAws.text();
+            const textoLimpio = textoCrudo.split(process.env.AWS_INTERNAL_URL).join("");
+
+            res.status(respuestaAws.status).set("Content-Type", "application/json").send(textoLimpio);
+
+        } catch (error) {
+            console.log("Error reenviando formato a AWS:", error.message);
+            res.status(500).json({ error: "Error interno al cambiar el formato." });
+        }
+
+        return;
+
+    }
+
     const formato = req.body.formato;
 
     if (!["normal", "difuminado", "camarajuego"].includes(formato)) {
