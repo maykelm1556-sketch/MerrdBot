@@ -131,12 +131,16 @@ router.post("/:id/reposicionar", async (req, res) => {
         return;
     }
 
+    console.log(`>>> INICIO reposicionar clip ${id} (zoom=${zoom}, offsetX=${offsetX}, offsetY=${offsetY})`);
+
   try {
 
         const rutaMp4Actual = path.join(__dirname, "..", "public", clip.rutaVideo);
         const rutaVerticalActual = path.join(__dirname, "..", "public", clip.rutaVideoVertical);
 
         await generarVersionVerticalPersonalizada(rutaMp4Actual, rutaVerticalActual, { zoom, offsetX, offsetY });
+
+        console.log(`>>> Vertical personalizada generada para ${id}`);
 
         try {
 
@@ -149,6 +153,8 @@ router.post("/:id/reposicionar", async (req, res) => {
 
             fs.unlinkSync(rutaVerticalActual);
             fs.renameSync(rutaVerticalConSubs, rutaVerticalActual);
+
+            console.log(`>>> Subtítulos quemados OK para ${id}`);
 
         } catch (errorSubs) {
             console.log("No se pudieron regenerar subtítulos tras reposicionar:", errorSubs.message);
