@@ -94,6 +94,7 @@ app.get("/clips/:archivo", async (req, res) => {
         }
 
         res.set("Content-Type", respuestaAws.headers.get("content-type") || "application/octet-stream");
+        res.set("Cache-Control", "no-store, no-cache, must-revalidate");
         respuestaAws.body.pipe ? respuestaAws.body.pipe(res) : res.send(Buffer.from(await respuestaAws.arrayBuffer()));
 
     } catch (error) {
