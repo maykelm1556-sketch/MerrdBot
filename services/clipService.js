@@ -345,11 +345,11 @@ function quemarSubtitulos(rutaVideoEntrada, rutaSrt, rutaVideoSalida, marginV) {
         const carpeta = path.dirname(rutaSrt);
         const srtRelativo = path.basename(rutaSrt);
         const margenReal = marginV !== undefined ? marginV : 40;
-        const estilo = `FontName=Arial,FontSize=14,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=0,Bold=1,Alignment=2,MarginV=${margenReal}`;
+      const estilo = `FontName=Arial\\,FontSize=14\\,PrimaryColour=&H00FFFFFF\\,OutlineColour=&H00000000\\,BorderStyle=1\\,Outline=2\\,Shadow=0\\,Bold=1\\,Alignment=2\\,MarginV=${margenReal}`;
 
         const args = [
             "-i", rutaVideoEntrada,
-            "-vf", `subtitles=${srtRelativo}:force_style='${estilo}'`,
+            "-vf", `subtitles=${srtRelativo}:force_style=${estilo}`,
             "-c:a", "copy",
             "-y", rutaVideoSalida
         ];
