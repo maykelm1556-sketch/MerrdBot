@@ -12,6 +12,68 @@ const viewerNivel = document.getElementById("viewerNivel");
 const viewerWatchtime = document.getElementById("viewerWatchtime");
 const btnViewerLogout = document.getElementById("btnViewerLogout");
 
+const viewerAvatarImg = document.getElementById("viewerAvatarImg");
+const viewerAvatarPlaceholder = document.getElementById("viewerAvatarPlaceholder");
+const viewerAvatarInput = document.getElementById("viewerAvatarInput");
+const btnViewerAvatarSubir = document.getElementById("btnViewerAvatarSubir");
+
+function mostrarAvatar(rutaAvatar) {
+
+    if (rutaAvatar) {
+        viewerAvatarImg.src = rutaAvatar + "?t=" + Date.now();
+        viewerAvatarImg.style.display = "block";
+        viewerAvatarPlaceholder.style.display = "none";
+    } else {
+        viewerAvatarImg.style.display = "none";
+        viewerAvatarPlaceholder.style.display = "flex";
+    }
+
+}
+
+btnViewerAvatarSubir.addEventListener("click", () => {
+    viewerAvatarInput.click();
+});
+
+viewerAvatarInput.addEventListener("change", () => {
+
+    const archivo = viewerAvatarInput.files[0];
+
+    if (!archivo) return;
+
+    const formData = new FormData();
+    formData.append("avatar", archivo);
+
+    btnViewerAvatarSubir.disabled = true;
+    btnViewerAvatarSubir.textContent = "Subiendo...";
+
+    fetch("/api/viewer/avatar", {
+        method: "POST",
+        body: formData
+    })
+        .then(response => response.json().then(data => ({ status: response.status, data })))
+        .then(({ status, data }) => {
+
+            btnViewerAvatarSubir.disabled = false;
+            btnViewerAvatarSubir.textContent = "Cambiar foto";
+
+            if (status !== 200) {
+                alert(data.error || "No se pudo subir la imagen.");
+                return;
+            }
+
+            mostrarAvatar(data.avatar);
+
+        })
+        .catch(() => {
+            btnViewerAvatarSubir.disabled = false;
+            btnViewerAvatarSubir.textContent = "Cambiar foto";
+            alert("Error al subir la imagen.");
+        });
+
+    viewerAvatarInput.value = "";
+
+});
+
 function formatearWatchtimeViewer(minutos) {
 
     const dias = Math.floor(minutos / 1440);
@@ -41,6 +103,7 @@ function cargarViewer() {
             viewerPuntos.textContent = data.puntos.toLocaleString("es-ES");
             viewerNivel.textContent = data.nivel;
             viewerWatchtime.textContent = formatearWatchtimeViewer(data.watchtime);
+            mostrarAvatar(data.avatar);
 
             viewerLogin.style.display = "none";
             viewerPanel.style.display = "block";

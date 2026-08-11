@@ -10,6 +10,36 @@ const mongoose = require("mongoose");
 const http = require("http");
 const { Server } = require("socket.io");
 const cookieParser = require("cookie-parser");
+const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
+
+const carpetaAvatares = path.join(__dirname, "public", "avatares");
+if (!fs.existsSync(carpetaAvatares)) {
+    fs.mkdirSync(carpetaAvatares, { recursive: true });
+}
+
+const storageAvatares = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, carpetaAvatares);
+    },
+    filename: (req, file, cb) => {
+        const username = req.signedCookies.viewer_session;
+        const extension = path.extname(file.originalname) || ".jpg";
+        cb(null, `${username.toLowerCase()}${extension}`);
+    }
+});
+
+const uploadAvatar = multer({
+    storage: storageAvatares,
+    limits: { fileSize: 3 * 1024 * 1024 }, // máximo 3MB
+    fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith("image/")) {
+            return cb(new Error("Solo se permiten imágenes."));
+        }
+        cb(null, true);
+    }
+});
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -468,6 +498,22 @@ app.get("/auth/kick/viewer", (req, res) => {
 
 });
 
+function obtenerRutaAvatar(username) {
+
+    const nombreArchivoBase = username.toLowerCase();
+    const extensionesPosibles = [".jpg", ".jpeg", ".png", ".webp"];
+
+    for (const extension of extensionesPosibles) {
+        const rutaCompleta = path.join(carpetaAvatares, `${nombreArchivoBase}${extension}`);
+        if (fs.existsSync(rutaCompleta)) {
+            return `/avatares/${nombreArchivoBase}${extension}`;
+        }
+    }
+
+    return null;
+
+}
+
 app.get("/api/viewer/me", async (req, res) => {
 
     const username = req.signedCookies.viewer_session;
@@ -477,6 +523,8 @@ app.get("/api/viewer/me", async (req, res) => {
         return;
     }
 
+    const avatar = obtenerRutaAvatar(username);
+
     const datos = await Comunidad.findOne({ usuario: { $regex: `^${username}$`, $options: "i" } });
 
     if (!datos) {
@@ -485,7 +533,8 @@ app.get("/api/viewer/me", async (req, res) => {
             puntos: 0,
             nivel: 1,
             watchtime: 0,
-            sinDatos: true
+            sinDatos: true,
+            avatar: avatar
         });
         return;
     }
@@ -494,11 +543,30 @@ app.get("/api/viewer/me", async (req, res) => {
         usuario: datos.usuario,
         puntos: datos.puntos,
         nivel: datos.nivel,
-        watchtime: datos.watchtime
+        watchtime: datos.watchtime,
+        avatar: avatar
     });
 
 });
+app.post("/api/viewer/avatar", (req, res) => {
+    const username = req.signedCookies.viewer_session;
+    if (!username) {
+        res.status(401).json({ error: "No hay sesión de viewer activa." });
+        return;
+    }
 
+    uploadAvatar.single("avatar")(req, res, (error) => {
+        if (error) {
+            res.status(400).json({ error: error.message });
+            return;
+        }
+        if (!req.file) {
+            res.status(400).json({ error: "No se recibió ninguna imagen." });
+            return;
+        }
+        res.json({ ok: true, avatar: `/avatares/${req.file.filename}` });
+    });
+});
 app.post("/auth/kick/viewer/logout", (req, res) => {
     res.clearCookie("viewer_session");
     res.json({ ok: true });

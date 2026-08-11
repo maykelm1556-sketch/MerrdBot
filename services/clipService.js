@@ -206,7 +206,7 @@ function generarVersionVerticalFondoDifuminado(rutaVideo, rutaSalida) {
 
     return new Promise((resolve, reject) => {
 
-       const filtro = "[0:v]scale=1080:1920,boxblur=40:20,setsar=1[fondo];[0:v]scale=1080:-2,setsar=1[frente];[fondo][frente]overlay=(W-w)/2:(H-h)/2,setsar=1";
+   const filtro = "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=40:20,setsar=1[fondo];[0:v]scale=1080:-2,setsar=1[frente];[fondo][frente]overlay=(W-w)/2:(H-h)/2,setsar=1";
 
         const args = [
             "-i", rutaVideo,

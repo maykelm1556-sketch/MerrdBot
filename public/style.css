@@ -172,9 +172,13 @@ header h2 {
     margin-left: auto;
     background-color: #202024;
     border: 1px solid #3f3f46;
-    border-radius: 12px;
-    padding: 16px 20px;
-    min-width: 200px;
+    border-radius: 16px;
+    padding: 30px 40px;
+    min-width: 320px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 #btnViewerLogin {
@@ -198,14 +202,14 @@ header h2 {
 #viewerNombre {
     color: #ffffff;
     font-weight: bold;
-    font-size: 16px;
-    margin: 0 0 8px 0;
+    font-size: 22px;
+    margin: 0 0 14px 0;
 }
 
 .viewer-stat {
     color: #a1a1aa;
-    font-size: 13px;
-    margin: 4px 0;
+    font-size: 16px;
+    margin: 8px 0;
 }
 
 .viewer-stat span {
@@ -1913,4 +1917,64 @@ label[for="duracionGiroVisual"] {
     #introCard h2 {
         font-size: 19px;
     }
+}
+#fondoShapeGrid {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    display: block;
+}
+.banner-recuadro {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    background-color: #202024;
+    border: 1px solid #3f3f46;
+    border-radius: 16px;
+    padding: 30px 40px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+#viewerAvatarBloque {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+#viewerAvatarImg,
+#viewerAvatarPlaceholder {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #39ff14;
+}
+
+#viewerAvatarPlaceholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1a1a1a;
+    font-size: 32px;
+}
+
+#btnViewerAvatarSubir {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#btnViewerAvatarSubir:hover {
+    background-color: #39ff14;
+    color: #0a0a0a;
 }

@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" href="style.css">
 </head>
+<canvas id="fondoShapeGrid"></canvas>
 <div id="introBienvenida">
     <div id="introStage">
 
@@ -109,19 +110,22 @@
 
     </div>
 
-    <div class="banner-streamer">
+   <div class="banner-streamer">
+
+<div class="banner-recuadro">
 
     <img src="foto-streamer.png.png" alt="Foto del streamer" class="banner-foto">
 
-<div class="banner-info">
+    <div class="banner-info">
         <h1 class="banner-nombre" id="btnSonidoOviedo" style="cursor:pointer;">ElOviedo</h1>
         <div class="banner-estado">
             <span class="punto-en-vivo"></span> EN VIVO
         </div>
     </div>
 
-    <div id="viewerBox">
+</div>
 
+    <div id="viewerBox">
         <div id="viewerLogin">
             <a href="/auth/kick/viewer" id="btnViewerLogin">
                 Iniciar sesión con Kick
@@ -129,6 +133,14 @@
         </div>
 
         <div id="viewerPanel" style="display:none;">
+
+            <div id="viewerAvatarBloque">
+                <img id="viewerAvatarImg" src="" alt="Avatar" style="display:none;">
+                <div id="viewerAvatarPlaceholder">👤</div>
+                <input type="file" id="viewerAvatarInput" accept="image/*" style="display:none;">
+                <button id="btnViewerAvatarSubir">Cambiar foto</button>
+            </div>
+
             <p id="viewerNombre"></p>
             <p class="viewer-stat">Puntos: <span id="viewerPuntos"></span></p>
             <p class="viewer-stat">Nivel: <span id="viewerNivel"></span></p>
@@ -510,6 +522,18 @@
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script src="/socket.io/socket.io.js"></script>
+<script src="shapeGrid.js?v=2"></script>
+<script>
+    initShapeGrid(document.getElementById('fondoShapeGrid'), {
+        direction: 'diagonal',
+        speed: 0.5,
+        borderColor: 'rgba(255,255,255,0.08)',
+        squareSize: 40,
+        hoverFillColor: 'rgba(34,197,94,0.15)',
+        shape: 'hexagon',
+        hoverTrailAmount: 2
+    });
+</script>
 <script src="script.js"></script>
 
 </body>
