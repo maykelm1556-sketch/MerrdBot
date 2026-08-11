@@ -658,6 +658,12 @@ cargarSugerencias();
         el.style.display = "inline-block";
     });
 
+    const ttsRecuadroEl = document.getElementById("ttsRecuadro");
+    if (ttsRecuadroEl) {
+        ttsRecuadroEl.style.display = "flex";
+        cargarComandoAutoTts();
+    }
+
     renderEconomia();
 
 }
@@ -1797,6 +1803,56 @@ quitarComandoAutoSorteos.addEventListener("click", () => {
             pintarToggleSorteos();
             alert("Comando de Sorteos eliminado y desactivado.");
         });
+
+});
+
+const comandoAutoTtsInput = document.getElementById("comandoAutoTtsInput");
+const toggleComandoAutoTts = document.getElementById("toggleComandoAutoTts");
+const guardarComandoAutoTts = document.getElementById("guardarComandoAutoTts");
+
+let comandoAutoTtsActivo = false;
+
+function pintarToggleTts() {
+    toggleComandoAutoTts.textContent = comandoAutoTtsActivo ? "Activado" : "Desactivado";
+    toggleComandoAutoTts.style.backgroundColor = comandoAutoTtsActivo ? "#39ff14" : "#ff3b3b";
+    toggleComandoAutoTts.style.color = comandoAutoTtsActivo ? "#0a0a0a" : "#ffffff";
+}
+
+function cargarComandoAutoTts() {
+    fetch("/api/comando-auto/tts")
+        .then(response => response.json())
+        .then(data => {
+            comandoAutoTtsInput.value = data.comando || "!tts";
+            comandoAutoTtsActivo = data.activo || false;
+            pintarToggleTts();
+        });
+}
+
+toggleComandoAutoTts.addEventListener("click", () => {
+    comandoAutoTtsActivo = !comandoAutoTtsActivo;
+    pintarToggleTts();
+});
+
+guardarComandoAutoTts.addEventListener("click", () => {
+    const comando = comandoAutoTtsInput.value.trim();
+    fetch("/api/comando-auto/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comando: comando, activo: comandoAutoTtsActivo })
+    })
+        .then(response => response.json())
+        .then(() => {
+            alert("Comando de TTS guardado.");
+        });
+});
+
+socket.on("tts-mensaje", (data) => {
+
+    if (!window.speechSynthesis) return;
+
+    const utterance = new SpeechSynthesisUtterance(`${data.usuario} dice: ${data.mensaje}`);
+    utterance.lang = "es-ES";
+    window.speechSynthesis.speak(utterance);
 
 });
 

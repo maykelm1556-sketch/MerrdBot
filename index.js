@@ -147,6 +147,7 @@ const ComandoAuto = mongoose.model("ComandoAuto", comandoAutoSchema);
 
 let comandoAutoSorteos = { comando: "", activo: false };
 let comandoAutoRuleta = { comando: "", activo: false };
+let comandoAutoTts = { comando: "!tts", activo: false };
 
 async function cargarComandosAuto() {
 
@@ -155,9 +156,14 @@ async function cargarComandosAuto() {
         comandoAutoSorteos = { comando: configSorteos.comando, activo: configSorteos.activo };
     }
 
-    const configRuleta = await ComandoAuto.findOne({ destino: "ruleta" });
+   const configRuleta = await ComandoAuto.findOne({ destino: "ruleta" });
     if (configRuleta) {
         comandoAutoRuleta = { comando: configRuleta.comando, activo: configRuleta.activo };
+    }
+
+    const configTts = await ComandoAuto.findOne({ destino: "tts" });
+    if (configTts) {
+        comandoAutoTts = { comando: configTts.comando, activo: configTts.activo };
     }
 
 }
@@ -168,12 +174,14 @@ app.get("/api/comando-auto/:destino", (req, res) => {
 
     const destino = req.params.destino;
 
-    if (destino !== "sorteos" && destino !== "ruleta") {
+    if (destino !== "sorteos" && destino !== "ruleta" && destino !== "tts") {
         res.status(400).json({ error: "Destino inválido." });
         return;
     }
 
-    res.json(destino === "sorteos" ? comandoAutoSorteos : comandoAutoRuleta);
+    if (destino === "sorteos") { res.json(comandoAutoSorteos); return; }
+    if (destino === "ruleta") { res.json(comandoAutoRuleta); return; }
+    res.json(comandoAutoTts);
 
 });
 
@@ -183,7 +191,7 @@ app.post("/api/comando-auto/:destino", async (req, res) => {
     const comando = (req.body.comando || "").trim().toLowerCase();
     const activo = !!req.body.activo;
 
-    if (destino !== "sorteos" && destino !== "ruleta") {
+    if (destino !== "sorteos" && destino !== "ruleta" && destino !== "tts") {
         res.status(400).json({ error: "Destino inválido." });
         return;
     }
@@ -196,8 +204,10 @@ app.post("/api/comando-auto/:destino", async (req, res) => {
 
     if (destino === "sorteos") {
         comandoAutoSorteos = { comando: comando, activo: activo };
-    } else {
+    } else if (destino === "ruleta") {
         comandoAutoRuleta = { comando: comando, activo: activo };
+    } else {
+        comandoAutoTts = { comando: comando, activo: activo };
     }
 
     res.json({ ok: true, comando: comando, activo: activo });
@@ -1125,6 +1135,16 @@ let usuario = null;
                         await enviarMensajeChat(`@${usuario} hubo un error buscando la canción.`);
                     }
 
+                }
+
+            }
+
+          if (ROL === "panel" && comandoAutoTts.activo && comandoAutoTts.comando && comando.startsWith(comandoAutoTts.comando + " ")) {
+
+                const mensajeTts = texto.trim().slice(comandoAutoTts.comando.length + 1).trim();
+
+                if (mensajeTts) {
+                    io.emit("tts-mensaje", { usuario: usuario, mensaje: mensajeTts });
                 }
 
             }
