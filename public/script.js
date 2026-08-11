@@ -260,6 +260,7 @@ function renderClips() {
              <button class="editarUsuario recortarClip" data-id="${clip._id}" data-duracion="${clip.duracionSegundos}">✂️ Recortar más</button>
                 <button class="editarUsuario editarPosicionClip" data-id="${clip._id}" data-zoom="${clip.zoom || 100}" data-offsetx="${clip.offsetX || 0}" data-offsety="${clip.offsetY || 0}">🖼️ Editar posición</button>
                 <button class="editarUsuario abrirFormatoClip" data-id="${clip._id}">🎨 Formato</button>
+                <button class="editarUsuario editarSubtitulosClip" data-id="${clip._id}">📝 Subtítulos</button>
               <a href="${clip.rutaVideoVertical}" download class="editarUsuario" style="text-decoration:none; display:inline-block;">⬇️ Descargar</a>
                 <button class="eliminarUsuario eliminarClip" data-id="${clip._id}">🗑️ Eliminar</button>
             </div>
@@ -531,6 +532,85 @@ document.addEventListener("click", (e) => {
 cancelarFormato.addEventListener("click", () => {
     modalFormato.style.display = "none";
     idClipEligiendoFormato = null;
+});
+
+const modalSubtitulos = document.getElementById("modalSubtitulos");
+const textareaSubtitulos = document.getElementById("textareaSubtitulos");
+const guardarSubtitulos = document.getElementById("guardarSubtitulos");
+const cancelarSubtitulos = document.getElementById("cancelarSubtitulos");
+
+let idClipEditandoSubtitulos = null;
+
+document.addEventListener("click", (e) => {
+
+    if (e.target.classList.contains("editarSubtitulosClip")) {
+
+        const id = e.target.dataset.id;
+        idClipEditandoSubtitulos = id;
+
+        textareaSubtitulos.value = "Cargando...";
+        modalSubtitulos.style.display = "flex";
+
+        fetch(`/api/clips/${id}/subtitulos`)
+            .then(response => response.json().then(data => ({ status: response.status, data })))
+            .then(({ status, data }) => {
+
+                if (status !== 200) {
+                    textareaSubtitulos.value = "";
+                    alert(data.error || "No se pudieron cargar los subtítulos.");
+                    modalSubtitulos.style.display = "none";
+                    return;
+                }
+
+                textareaSubtitulos.value = data.srt;
+
+            });
+
+    }
+
+});
+
+cancelarSubtitulos.addEventListener("click", () => {
+    modalSubtitulos.style.display = "none";
+    idClipEditandoSubtitulos = null;
+});
+
+guardarSubtitulos.addEventListener("click", () => {
+
+    if (!idClipEditandoSubtitulos) return;
+
+    const srtEditado = textareaSubtitulos.value;
+
+    guardarSubtitulos.disabled = true;
+    guardarSubtitulos.textContent = "Guardando (puede tardar)...";
+
+    fetch(`/api/clips/${idClipEditandoSubtitulos}/subtitulos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ srt: srtEditado })
+    })
+        .then(response => response.json().then(data => ({ status: response.status, data })))
+        .then(({ status, data }) => {
+
+            guardarSubtitulos.disabled = false;
+            guardarSubtitulos.textContent = "Guardar cambios";
+
+            if (status !== 200) {
+                alert(data.error || "No se pudieron guardar los subtítulos.");
+                return;
+            }
+
+            alert("Subtítulos actualizados correctamente.");
+            modalSubtitulos.style.display = "none";
+            idClipEditandoSubtitulos = null;
+
+        })
+        .catch(() => {
+            guardarSubtitulos.disabled = false;
+            guardarSubtitulos.textContent = "Guardar cambios";
+            alert("Error al guardar los subtítulos.");
+        });
+
 });
 
 function aplicarFormato(formato) {

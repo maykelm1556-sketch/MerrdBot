@@ -266,6 +266,123 @@ router.post("/:id/formato", async (req, res) => {
 
 });
 
+router.get("/:id/subtitulos", async (req, res) => {
+
+    const id = req.params.id;
+
+    if (ROL === "panel") {
+
+        try {
+
+            const respuestaAws = await fetch(`${process.env.AWS_INTERNAL_URL}/api/clips/${id}/subtitulos`);
+            const textoCrudo = await respuestaAws.text();
+            const textoLimpio = textoCrudo.split(process.env.AWS_INTERNAL_URL).join("");
+
+            res.status(respuestaAws.status).set("Content-Type", "application/json").send(textoLimpio);
+
+        } catch (error) {
+            console.log("Error reenviando lectura de subtítulos a AWS:", error.message);
+            res.status(500).json({ error: "Error interno al leer los subtítulos." });
+        }
+
+        return;
+
+    }
+
+    const clip = await Clip.findById(id);
+
+    if (!clip) {
+        res.status(404).json({ error: "Clip no encontrado." });
+        return;
+    }
+
+    try {
+
+        const carpetaClips = path.join(__dirname, "..", "public", "clips");
+        const nombreBase = path.basename(clip.rutaVideoVertical, ".mp4");
+        const rutaSrt = path.join(carpetaClips, `${nombreBase}.srt`);
+
+        if (!fs.existsSync(rutaSrt)) {
+            res.status(404).json({ error: "Este clip todavía no tiene subtítulos generados." });
+            return;
+        }
+
+        const contenidoSrt = fs.readFileSync(rutaSrt, "utf-8");
+
+        res.json({ srt: contenidoSrt });
+
+    } catch (error) {
+        console.log("Error leyendo subtítulos:", error.message);
+        res.status(500).json({ error: "Error interno al leer los subtítulos." });
+    }
+
+});
+router.post("/:id/subtitulos", async (req, res) => {
+
+    const id = req.params.id;
+
+    if (ROL === "panel") {
+
+        try {
+
+            const respuestaAws = await fetch(`${process.env.AWS_INTERNAL_URL}/api/clips/${id}/subtitulos`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(req.body)
+            });
+
+            const textoCrudo = await respuestaAws.text();
+            const textoLimpio = textoCrudo.split(process.env.AWS_INTERNAL_URL).join("");
+
+            res.status(respuestaAws.status).set("Content-Type", "application/json").send(textoLimpio);
+
+        } catch (error) {
+            console.log("Error reenviando edición de subtítulos a AWS:", error.message);
+            res.status(500).json({ error: "Error interno al guardar los subtítulos." });
+        }
+
+        return;
+
+    }
+
+    const srtNuevo = req.body.srt;
+
+    if (typeof srtNuevo !== "string" || srtNuevo.trim() === "") {
+        res.status(400).json({ error: "Falta el texto de los subtítulos." });
+        return;
+    }
+
+    const clip = await Clip.findById(id);
+
+    if (!clip) {
+        res.status(404).json({ error: "Clip no encontrado." });
+        return;
+    }
+
+    try {
+
+        const carpetaClips = path.join(__dirname, "..", "public", "clips");
+        const nombreBase = path.basename(clip.rutaVideoVertical, ".mp4");
+        const rutaSrt = path.join(carpetaClips, `${nombreBase}.srt`);
+        const rutaVerticalActual = path.join(__dirname, "..", "public", clip.rutaVideoVertical);
+        const rutaVerticalConSubs = path.join(carpetaClips, `${nombreBase}_subs.mp4`);
+
+        fs.writeFileSync(rutaSrt, srtNuevo, "utf-8");
+
+        await quemarSubtitulos(rutaVerticalActual, rutaSrt, rutaVerticalConSubs, clip.subtituloMarginV);
+
+        fs.unlinkSync(rutaVerticalActual);
+        fs.renameSync(rutaVerticalConSubs, rutaVerticalActual);
+
+        res.json({ ok: true });
+
+    } catch (error) {
+        console.log("Error guardando subtítulos editados:", error.message);
+        res.status(500).json({ error: "Error interno al guardar los subtítulos." });
+    }
+
+});
+
 router.delete("/:id", async (req, res) => {
 
     const id = req.params.id;

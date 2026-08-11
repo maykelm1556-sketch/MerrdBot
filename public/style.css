@@ -2034,3 +2034,67 @@ label[for="duracionGiroVisual"] {
     background-color: #39ff14;
     color: #0a0a0a;
 }
+#modalSubtitulos {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+#modalSubtitulosContenido {
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    padding: 25px;
+    width: 500px;
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#textareaSubtitulos {
+    width: 100%;
+    height: 300px;
+    background-color: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px;
+    color: #ffffff;
+    font-size: 13px;
+    font-family: monospace;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+#textareaSubtitulos:focus {
+    outline: none;
+    border-color: #39ff14;
+}
+
+#guardarSubtitulos {
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#cancelarSubtitulos {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
