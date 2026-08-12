@@ -2098,3 +2098,86 @@ label[for="duracionGiroVisual"] {
     cursor: pointer;
     font-size: 14px;
 }
+#contenedorMoneda {
+    display: flex;
+    justify-content: center;
+    margin: 25px auto;
+    perspective: 1000px;
+}
+
+#monedaVisual {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg);
+}
+
+#monedaCara, #monedaSello {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    backface-visibility: hidden;
+    border: 4px solid #2ecc10;
+    box-shadow: 0 0 15px rgba(0,0,0,0.4);
+}
+
+#monedaSello {
+    transform: rotateY(180deg);
+}
+
+label[for="duracionGiroMoneda"] {
+    color: #ffffff;
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+#duracionGiroMoneda {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: #ffffff;
+    font-size: 14px;
+    width: 100px;
+}
+
+#girarMonedaBtn {
+    background-color: #39ff14;
+    color: #0a0a0a;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#girarMonedaBtn:hover {
+    background-color: #2ecc10;
+}
+
+#barajearMonedaBtn {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#barajearMonedaBtn:hover {
+    opacity: 0.8;
+}
+
+#resultadoMoneda {
+    color: #39ff14;
+    text-align: center;
+    margin-top: 15px;
+}

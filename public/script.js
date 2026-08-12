@@ -2041,21 +2041,112 @@ document.addEventListener("click", (e) => {
 });
 const modoInstantaneoBtn = document.getElementById("modoInstantaneoBtn");
 const modoRuletaBtn = document.getElementById("modoRuletaBtn");
+const modoMonedaBtn = document.getElementById("modoMonedaBtn");
 const panelInstantaneo = document.getElementById("panelInstantaneo");
 const panelRuleta = document.getElementById("panelRuleta");
+const panelMoneda = document.getElementById("panelMoneda");
 
-modoInstantaneoBtn.addEventListener("click", () => {
-    modoInstantaneoBtn.classList.add("modo-activo");
-    modoRuletaBtn.classList.remove("modo-activo");
-    panelInstantaneo.style.display = "block";
-    panelRuleta.style.display = "none";
+const bloqueParticipantesSorteo = document.getElementById("bloqueParticipantesSorteo");
+
+function activarModoSorteo(botonActivo) {
+
+    [modoInstantaneoBtn, modoRuletaBtn, modoMonedaBtn].forEach(btn => btn.classList.remove("modo-activo"));
+    botonActivo.classList.add("modo-activo");
+
+    panelInstantaneo.style.display = botonActivo === modoInstantaneoBtn ? "block" : "none";
+    panelRuleta.style.display = botonActivo === modoRuletaBtn ? "block" : "none";
+    panelMoneda.style.display = botonActivo === modoMonedaBtn ? "block" : "none";
+
+    bloqueParticipantesSorteo.style.display = botonActivo === modoMonedaBtn ? "none" : "block";
+
+}
+
+modoInstantaneoBtn.addEventListener("click", () => activarModoSorteo(modoInstantaneoBtn));
+modoRuletaBtn.addEventListener("click", () => activarModoSorteo(modoRuletaBtn));
+modoMonedaBtn.addEventListener("click", () => activarModoSorteo(modoMonedaBtn));
+
+let anguloActualMoneda = 0;
+let girandoMoneda = false;
+
+const monedaVisual = document.getElementById("monedaVisual");
+const duracionGiroMoneda = document.getElementById("duracionGiroMoneda");
+const girarMonedaBtn = document.getElementById("girarMonedaBtn");
+const barajearMonedaBtn = document.getElementById("barajearMonedaBtn");
+const resultadoMoneda = document.getElementById("resultadoMoneda");
+
+function reproducirTickMoneda() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.value = 700;
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.05);
+}
+
+function reproducirFanfarriaMoneda() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const notas = [523, 659, 784, 1047];
+    notas.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + i * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.12 + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + i * 0.12);
+        osc.stop(audioCtx.currentTime + i * 0.12 + 0.3);
+    });
+}
+
+girarMonedaBtn.addEventListener("click", () => {
+
+    if (girandoMoneda) return;
+
+    girandoMoneda = true;
+    resultadoMoneda.textContent = "Girando...";
+
+    const segundos = parseFloat(duracionGiroMoneda.value) || 2;
+    const esCara = Math.random() < 0.5;
+
+    let objetivo = anguloActualMoneda - (anguloActualMoneda % 360) + (5 * 360) + (esCara ? 0 : 180);
+    if (objetivo <= anguloActualMoneda) objetivo += 360;
+
+    monedaVisual.style.transition = `transform ${segundos}s cubic-bezier(0.17, 0.67, 0.12, 0.99)`;
+    monedaVisual.style.transform = `rotateY(${objetivo}deg)`;
+    anguloActualMoneda = objetivo;
+
+    const intervaloTick = setInterval(reproducirTickMoneda, 120);
+
+    setTimeout(() => {
+        clearInterval(intervaloTick);
+        reproducirFanfarriaMoneda();
+        resultadoMoneda.textContent = esCara ? "🎉 Resultado: CARA" : "🎉 Resultado: SELLO";
+        girandoMoneda = false;
+    }, segundos * 1000 + 100);
+
 });
 
-modoRuletaBtn.addEventListener("click", () => {
-    modoRuletaBtn.classList.add("modo-activo");
-    modoInstantaneoBtn.classList.remove("modo-activo");
-    panelRuleta.style.display = "block";
-    panelInstantaneo.style.display = "none";
+barajearMonedaBtn.addEventListener("click", () => {
+
+    if (girandoMoneda) return;
+
+    const mostrandoCaraActual = (Math.round(anguloActualMoneda / 180) % 2 === 0);
+    const nuevoEsCara = !mostrandoCaraActual;
+
+    let objetivo = anguloActualMoneda - (anguloActualMoneda % 360) + 360 + (nuevoEsCara ? 0 : 180);
+    if (objetivo <= anguloActualMoneda) objetivo += 360;
+
+    monedaVisual.style.transition = "transform 0.5s ease";
+    monedaVisual.style.transform = `rotateY(${objetivo}deg)`;
+    anguloActualMoneda = objetivo;
+
+    resultadoMoneda.textContent = "";
+
 });
 const btnSonidoOviedo = document.getElementById("btnSonidoOviedo");
 

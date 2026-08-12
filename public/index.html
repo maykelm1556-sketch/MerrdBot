@@ -291,40 +291,47 @@
 
                 <h2>Sorteos</h2>
 
-                <div id="selectorModoSorteo" style="display:flex; gap:12px; margin-bottom:20px;">
+               <div id="selectorModoSorteo" style="display:flex; gap:12px; margin-bottom:20px;">
                     <button id="modoInstantaneoBtn" class="modo-sorteo-btn modo-activo">
                         🎁 Ganador instantáneo
                     </button>
                     <button id="modoRuletaBtn" class="modo-sorteo-btn">
                         🎡 Ruleta
                     </button>
+                    <button id="modoMonedaBtn" class="modo-sorteo-btn">
+                        🪙 Moneda
+                    </button>
                 </div>
 
-                <input
-                    type="text"
-                    id="nombreSorteo"
-                    placeholder="Nombre del participante">
+               <div id="bloqueParticipantesSorteo">
 
-                <button id="agregarParticipante" class="admin-only">
-                    Agregar
-                </button>
+                    <input
+                        type="text"
+                        id="nombreSorteo"
+                        placeholder="Nombre del participante">
+
+                    <button id="agregarParticipante" class="admin-only">
+                        Agregar
+                    </button>
 <div class="menu-sincronizar admin-only">
-                    <button id="btnSincronizarSorteos">🔄 Sincronizar usuarios ▼</button>
-                    <div id="dropdownSincronizarSorteos" style="display:none;">
-                        <button id="importarEconomia">Desde Economía</button>
-                        <button id="importarComunidad">Desde Comunidad</button>
+                        <button id="btnSincronizarSorteos">🔄 Sincronizar usuarios ▼</button>
+                        <div id="dropdownSincronizarSorteos" style="display:none;">
+                            <button id="importarEconomia">Desde Economía</button>
+                            <button id="importarComunidad">Desde Comunidad</button>
+                        </div>
                     </div>
-                </div>
 
-               <div class="admin-only" style="margin-top:16px; margin-bottom:16px;">
-                    <label for="comandoAutoSorteosInput">Comando para unirse por chat:</label>
-                    <input type="text" id="comandoAutoSorteosInput" placeholder="Ej: !entrar">
-                    <button id="toggleComandoAutoSorteos">Desactivado</button>
-                    <button id="guardarComandoAutoSorteos">Guardar</button>
-                   <button id="quitarComandoAutoSorteos" class="eliminarUsuario">🗑️ Quitar comando</button>
-                </div>
+                   <div class="admin-only" style="margin-top:16px; margin-bottom:16px;">
+                        <label for="comandoAutoSorteosInput">Comando para unirse por chat:</label>
+                        <input type="text" id="comandoAutoSorteosInput" placeholder="Ej: !entrar">
+                        <button id="toggleComandoAutoSorteos">Desactivado</button>
+                        <button id="guardarComandoAutoSorteos">Guardar</button>
+                       <button id="quitarComandoAutoSorteos" class="eliminarUsuario">🗑️ Quitar comando</button>
+                    </div>
 
-                <ul id="listaParticipantes"></ul>
+                    <ul id="listaParticipantes"></ul>
+
+                </div>
 
                 <div id="panelInstantaneo">
 
@@ -358,8 +365,32 @@
                         🔀 Barajear
                     </button>
 
-                    <h3 id="resultadoRuedaVisual"></h3>
+                   <h3 id="resultadoRuedaVisual"></h3>
                     <button id="eliminarGanadorRuleta" class="admin-only" style="display:none;">Quitar ganador de la lista</button>
+
+                </div>
+
+               <div id="panelMoneda" style="display:none;">
+
+                    <label for="duracionGiroMoneda">Duración del giro (segundos):</label>
+                    <input type="number" id="duracionGiroMoneda" value="2" min="0.5" max="10" step="0.5">
+
+                    <div id="contenedorMoneda">
+                        <div id="monedaVisual">
+                            <img src="moneda-cara.png" id="monedaCara" alt="Cara">
+                            <img src="moneda-sello.png" id="monedaSello" alt="Sello">
+                        </div>
+                    </div>
+
+                    <button id="girarMonedaBtn" class="admin-only">
+                        🪙 Girar la moneda
+                    </button>
+
+                    <button id="barajearMonedaBtn" class="admin-only" style="margin-left: 20px;">
+                        🔀 Barajear
+                    </button>
+
+                    <h3 id="resultadoMoneda"></h3>
 
                 </div>
 
