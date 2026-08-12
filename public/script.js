@@ -1302,30 +1302,8 @@ girarRuedaVisual.addEventListener("click", () => {
     const segundos = parseFloat(duracionGiroVisual.value) || 4;
     const porcion = 360 / total;
 
-    // ⚠️ SOLO PARA PRUEBA LOCAL — borrar este bloque para volver a la normalidad
-    const NOMBRE_EXCLUIDO_PRUEBA = "Merdo";
-    let indiceForzado = null;
-    if (participantesSnapshot.includes(NOMBRE_EXCLUIDO_PRUEBA)) {
-        const opciones = participantesSnapshot
-            .map((nombre, i) => ({ nombre, i }))
-            .filter(o => o.nombre !== NOMBRE_EXCLUIDO_PRUEBA);
-        indiceForzado = opciones[Math.floor(Math.random() * opciones.length)].i;
-    }
-    // ⚠️ FIN DEL BLOQUE DE PRUEBA
-
     const vueltasExtra = 5 * 360;
-
-    let giroAleatorio;
-    if (indiceForzado !== null) {
-        // apunta al centro del segmento elegido (el puntero está arriba, en 0°)
-        const centroSegmento = porcion * indiceForzado + porcion / 2;
-        const margen = porcion * 0.3;
-        const variacion = (Math.random() * margen * 2) - margen;
-        giroAleatorio = (360 - centroSegmento + variacion + 360) % 360;
-    } else {
-        giroAleatorio = Math.random() * 360;
-    }
-
+    const giroAleatorio = Math.random() * 360;
     const rotacionFinal = vueltasExtra + giroAleatorio;
 
     ruedaVisual.style.transition = "none";
