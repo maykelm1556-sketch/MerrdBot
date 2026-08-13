@@ -247,10 +247,12 @@ function renderClips() {
         return;
     }
 
+    const marcaTiempo = Date.now();
+
     misClips.forEach((clip) => {
         clipsLista.innerHTML += `
         <div class="usuario-item" style="align-items:flex-start; gap:12px; flex-wrap:wrap;">
-       <video src="${clip.rutaVideoVertical}" poster="${clip.miniatura}" controls style="width:140px; border-radius:6px; background:#000;"></video>
+       <video src="${clip.rutaVideoVertical}?t=${marcaTiempo}" poster="${clip.miniatura}" controls style="width:140px; border-radius:6px; background:#000;"></video>
             <div style="flex:1; min-width:150px;">
                 <p style="margin:0;">${escaparHtml(clip.titulo)}</p>
                 <small style="color:#888;">${clip.duracionSegundos}s · ${clip.usuarioCreador}</small>
