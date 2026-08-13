@@ -450,70 +450,119 @@
 
 </div>
 
-<div id="modalEditarPosicion" style="display:none;">
 
-    <div id="modalEditarPosicionContenido">
+<div id="editorClipPanel" style="display:none;">
 
-        <h3>Editar posición del clip</h3>
+    <div id="editorClipHeader">
+        <button id="cerrarEditorClip">← Volver</button>
+        <span id="editorClipTitulo">Editando clip</span>
+        <button id="editorClipGuardar">Guardar cambios</button>
+    </div>
 
-     <div id="previaEdicionContenedor" style="width:150px; aspect-ratio:9/16; overflow:hidden; border-radius:8px; background:#000; margin:0 auto 16px; position:relative;">
-            <video id="previaEdicionVideo" muted loop autoplay style="position:absolute; top:50%; left:50%; width:100%; height:auto;"></video>
-            <div id="previaEdicionSubtitulo" style="position:absolute; bottom:8%; left:0; width:100%; text-align:center; color:#ffffff; font-weight:bold; font-size:11px; text-shadow:1px 1px 2px #000, -1px -1px 2px #000; padding:0 6px; box-sizing:border-box; z-index:2;"></div>
+    <div id="editorClipCuerpo">
+
+        <div id="editorClipSidebar">
+            <button class="editorClipSeccionBtn activo" data-seccion="recortar">✂️<br>Recortar</button>
+            <button class="editorClipSeccionBtn" data-seccion="posicion">🖼️<br>Posición</button>
+            <button class="editorClipSeccionBtn" data-seccion="formato">🎨<br>Formato</button>
+            <button class="editorClipSeccionBtn" data-seccion="subtitulos">💬<br>Subtítulos</button>
+            <button class="editorClipSeccionBtn" data-seccion="texto">🔤<br>Texto</button>
         </div>
 
-        <label for="sliderZoom">Zoom: <span id="valorZoom">100</span>%</label>
-        <input type="range" id="sliderZoom" min="100" max="300" step="1" value="100">
+        <div id="editorClipPreview">
+            <div id="editorClipPreviewWrap">
+                <div id="editorClipPreviewContenedor">
+                    <video id="editorClipVideo" muted loop autoplay></video>
+                    <div id="editorClipSubtituloPreview"></div>
+                    <div id="editorClipTextoPreview"></div>
+                </div>
 
-        <label for="sliderOffsetX">Horizontal: <span id="valorOffsetX">0</span>px</label>
-        <input type="range" id="sliderOffsetX" min="-500" max="500" step="1" value="0">
+                <div id="editorTrimBarContenedor" style="display:none;">
+                    <div id="editorTrimTrack">
+                        <div id="editorTrimSeleccion"></div>
+                        <div id="editorTrimHandleInicio" class="editorTrimHandle"></div>
+                        <div id="editorTrimHandleFin" class="editorTrimHandle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-     <label for="sliderOffsetY">Vertical: <span id="valorOffsetY">0</span>px</label>
-        <input type="range" id="sliderOffsetY" min="-500" max="500" step="1" value="0">
+        <div id="editorClipAjustes">
 
-        <label for="sliderSubtitulo">Posición subtítulos: <span id="valorSubtitulo">40</span>px</label>
-        <input type="range" id="sliderSubtitulo" min="0" max="800" step="5" value="40">
+           <div class="editorClipSeccion" id="seccionRecortar">
+                <h3>Recortar</h3>
 
-        <div style="margin-top:16px;">
-            <button id="guardarEdicionPosicion">Guardar cambios</button>
-            <button id="cancelarEdicionPosicion">Cancelar</button>
+                <div id="editorRecorteLabels" style="display:flex; justify-content:space-between; color:#a1a1aa; font-size:13px; margin-bottom:6px;">
+                    <span id="editorRecorteLabelInicio">0:00</span>
+                    <span id="editorRecorteLabelDuracion">10.0s</span>
+                    <span id="editorRecorteLabelFin">0:10</span>
+                </div>
+
+                <button id="editorAplicarRecorte" style="width:100%; margin-top:16px;">Aplicar recorte</button>
+            </div>
+
+            <div class="editorClipSeccion" id="seccionPosicion" style="display:none;">
+                <h3>Posición</h3>
+
+                <label for="sliderZoom">Zoom: <span id="valorZoom">100</span>%</label>
+                <input type="range" id="sliderZoom" min="100" max="300" step="1" value="100">
+
+                <label for="sliderOffsetX">Horizontal: <span id="valorOffsetX">0</span>px</label>
+                <input type="range" id="sliderOffsetX" min="-500" max="500" step="1" value="0">
+
+                <label for="sliderOffsetY">Vertical: <span id="valorOffsetY">0</span>px</label>
+                <input type="range" id="sliderOffsetY" min="-500" max="500" step="1" value="0">
+
+                <label for="sliderSubtitulo">Posición subtítulos: <span id="valorSubtitulo">40</span>px</label>
+                <input type="range" id="sliderSubtitulo" min="0" max="800" step="5" value="40">
+
+                <button id="editorAplicarPosicion" style="width:100%; margin-top:16px;">Guardar posición</button>
+            </div>
+<div class="editorClipSeccion" id="seccionFormato" style="display:none;">
+                <h3>Formato</h3>
+                <button id="formatoNormalBtn" class="formato-opcion-btn">📱 Normal (con barras)</button>
+                <button id="formatoDifuminadoBtn" class="formato-opcion-btn">🌫️ Fondo difuminado</button>
+                <button id="formatoCamaraJuegoBtn" class="formato-opcion-btn">🎮 Cámara + Juego</button>
+            </div>
+
+            <div class="editorClipSeccion" id="seccionSubtitulos" style="display:none;">
+                <h3>Subtítulos</h3>
+                <textarea id="textareaSubtitulos" spellcheck="false" style="width:100%; height:340px; box-sizing:border-box;"></textarea>
+                <button id="guardarSubtitulos" style="width:100%; margin-top:16px;">Guardar cambios</button>
+            </div>
+
+            <div class="editorClipSeccion" id="seccionTexto" style="display:none;">
+                <h3>Texto</h3>
+
+                <label for="textareaTextoOverlay">Contenido:</label>
+                <textarea id="textareaTextoOverlay" spellcheck="false" style="width:100%; height:80px; box-sizing:border-box;"></textarea>
+
+                <label for="selectFuenteTexto">Tipografía:</label>
+                <select id="selectFuenteTexto" style="width:100%; padding:8px; background:#1a1a1a; border:1px solid #333; border-radius:8px; color:#ffffff;">
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                    <option value="Georgia, serif">Georgia</option>
+                    <option value="'Courier New', monospace">Courier New</option>
+                    <option value="Impact, sans-serif">Impact</option>
+                    <option value="Verdana, sans-serif">Verdana</option>
+                    <option value="'Comic Sans MS', sans-serif">Comic Sans MS</option>
+                </select>
+
+                <label for="sliderTamanoTexto">Tamaño: <span id="valorTamanoTexto">32</span>px</label>
+                <input type="range" id="sliderTamanoTexto" min="12" max="120" step="1" value="32">
+
+                <label for="inputColorTexto">Color:</label>
+                <input type="color" id="inputColorTexto" value="#ffffff" style="width:100%; height:40px; border:1px solid #333; border-radius:8px; background:#1a1a1a; cursor:pointer;">
+
+                <button id="guardarTextoOverlay" style="width:100%; margin-top:16px;">Guardar texto</button>
+            </div>
+
         </div>
 
     </div>
 
 </div>
 
-<div id="modalFormato" style="display:none;">
-
-    <div id="modalFormatoContenido">
-
-        <h3>Elegir formato del clip</h3>
-
-        <button id="formatoNormalBtn" class="formato-opcion-btn">📱 Normal (con barras)</button>
-        <button id="formatoDifuminadoBtn" class="formato-opcion-btn">🌫️ Fondo difuminado</button>
-        <button id="formatoCamaraJuegoBtn" class="formato-opcion-btn">🎮 Cámara + Juego</button>
-
-        <button id="cancelarFormato" style="margin-top:12px;">Cancelar</button>
-
-    </div>
-
-</div>
-
-<div id="modalSubtitulos" style="display:none;">
-
-    <div id="modalSubtitulosContenido">
-
-        <h3>Editar subtítulos</h3>
-
-        <textarea id="textareaSubtitulos" spellcheck="false"></textarea>
-
-        <div style="margin-top:16px;">
-            <button id="guardarSubtitulos">Guardar cambios</button>
-            <button id="cancelarSubtitulos">Cancelar</button>
-        </div>
-
-    </div>
-
-</div>
 <div id="modalEditarAdmin" style="display:none;">
 
     <div id="modalEditarAdminContenido">

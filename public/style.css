@@ -2034,6 +2034,246 @@ label[for="duracionGiroVisual"] {
     background-color: #39ff14;
     color: #0a0a0a;
 }
+
+#editorClipPanel {
+    position: fixed;
+    inset: 0;
+    background-color: #0a0a0a;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+}
+
+#editorClipHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background-color: #18181b;
+    border-bottom: 1px solid #3f3f46;
+}
+
+#editorClipHeader button {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#editorClipGuardar {
+    background-color: #39ff14 !important;
+    color: #0a0a0a !important;
+}
+
+#editorClipTitulo {
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 15px;
+}
+
+#editorClipCuerpo {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+#editorClipSidebar {
+    width: 90px;
+    background-color: #18181b;
+    border-right: 1px solid #3f3f46;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 0;
+}
+
+.editorClipSeccionBtn {
+    background: none;
+    border: none;
+    color: #a1a1aa;
+    padding: 16px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.editorClipSeccionBtn:hover {
+    background-color: #202024;
+    color: #ffffff;
+}
+
+.editorClipSeccionBtn.activo {
+    color: #39ff14;
+    background-color: #202024;
+    border-left: 3px solid #39ff14;
+}
+
+#editorClipPreview {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #050505;
+    padding: 20px;
+}
+
+#editorClipPreviewContenedor {
+    position: relative;
+    height: 100%;
+    max-height: 640px;
+    aspect-ratio: 9/16;
+    background-color: #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#editorClipVideo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: auto;
+    transform: translate(-50%, -50%);
+}
+
+#editorClipSubtituloPreview {
+    position: absolute;
+    bottom: 8%;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 14px;
+    text-shadow: 1px 1px 2px #000, -1px -1px 2px #000;
+    padding: 0 10px;
+    box-sizing: border-box;
+    z-index: 2;
+}
+
+#editorClipTextoPreview {
+    position: absolute;
+    top: 12%;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    text-shadow: 1px 1px 2px #000, -1px -1px 2px #000;
+    padding: 0 10px;
+    box-sizing: border-box;
+    z-index: 2;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+#editorClipAjustes {
+    width: 320px;
+    background-color: #18181b;
+    border-left: 1px solid #3f3f46;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+#editorClipPreviewWrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    height: 100%;
+}
+
+#editorTrimBarContenedor {
+    width: 100%;
+    max-width: 500px;
+    padding: 0 8px;
+    box-sizing: border-box;
+}
+
+#editorTrimTrack {
+    position: relative;
+    height: 44px;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+
+#editorTrimSeleccion {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(57, 255, 20, 0.25);
+    border-top: 2px solid #39ff14;
+    border-bottom: 2px solid #39ff14;
+}
+
+.editorTrimHandle {
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    width: 14px;
+    background-color: #39ff14;
+    border-radius: 4px;
+    cursor: ew-resize;
+    z-index: 3;
+}
+
+.editorClipSeccion h3 {
+    color: #ffffff;
+    margin: 0 0 16px 0;
+}
+
+.editorClipSeccion label {
+    display: block;
+    color: #ffffff;
+    font-size: 13px;
+    margin-top: 16px;
+    margin-bottom: 6px;
+}
+
+.editorClipSeccion input[type="range"] {
+    display: block;
+    width: 100%;
+    accent-color: #39ff14;
+    box-sizing: border-box;
+}
+
+.editorClipSeccion textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+
+    #editorClipCuerpo {
+        flex-direction: column;
+    }
+
+    #editorClipSidebar {
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+        border-right: none;
+        border-bottom: 1px solid #3f3f46;
+    }
+
+    #editorClipPreview {
+        padding: 10px;
+    }
+
+    #editorClipPreviewContenedor {
+        max-height: 300px;
+    }
+
+    #editorClipAjustes {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid #3f3f46;
+    }
+
+}
 #modalSubtitulos {
     position: fixed;
     top: 0;

@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
 const Clip = require("../models/Clip");
-const { recortarClipExistente, generarVersionVerticalPersonalizada, generarVersionVerticalFondoDifuminado, generarVersionCamaraJuego, generarSubtitulos, quemarSubtitulos, convertirClipAUrlsAbsolutas } = require("../services/clipService");
+const { recortarClipExistente, generarVersionVerticalPersonalizada, generarVersionVerticalFondoDifuminado, generarVersionCamaraJuego, generarSubtitulos, quemarSubtitulos, quemarTextoOverlay, convertirClipAUrlsAbsolutas } = require("../services/clipService");
 const path = require("path");
 const fs = require("fs");
 const ROL = process.env.ROL || "panel";
@@ -379,6 +379,76 @@ router.post("/:id/subtitulos", async (req, res) => {
     } catch (error) {
         console.log("Error guardando subtítulos editados:", error.message);
         res.status(500).json({ error: "Error interno al guardar los subtítulos." });
+    }
+
+});
+
+router.post("/:id/texto", async (req, res) => {
+
+    const id = req.params.id;
+
+    if (ROL === "panel") {
+
+        try {
+
+            const respuestaAws = await fetch(`${process.env.AWS_INTERNAL_URL}/api/clips/${id}/texto`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(req.body)
+            });
+
+            const textoCrudo = await respuestaAws.text();
+            const textoLimpio = textoCrudo.split(process.env.AWS_INTERNAL_URL).join("");
+
+            res.status(respuestaAws.status).set("Content-Type", "application/json").send(textoLimpio);
+
+        } catch (error) {
+            console.log("Error reenviando texto a AWS:", error.message);
+            res.status(500).json({ error: "Error interno al guardar el texto." });
+        }
+
+        return;
+
+    }
+
+    const { textoOverlay, textoFuente, textoTamano, textoColor } = req.body;
+
+    const clip = await Clip.findById(id);
+
+    if (!clip) {
+        res.status(404).json({ error: "Clip no encontrado." });
+        return;
+    }
+
+    try {
+
+        const carpetaClips = path.join(__dirname, "..", "public", "clips");
+        const rutaVerticalActual = path.join(__dirname, "..", "public", clip.rutaVideoVertical);
+        const nombreBase = path.basename(clip.rutaVideoVertical, ".mp4");
+        const rutaConTexto = path.join(carpetaClips, `${nombreBase}_texto.mp4`);
+
+       await quemarTextoOverlay(rutaVerticalActual, rutaConTexto, {
+            texto: textoOverlay,
+            fuente: textoFuente,
+            tamano: textoTamano,
+            color: textoColor
+        });
+
+        fs.unlinkSync(rutaVerticalActual);
+        fs.renameSync(rutaConTexto, rutaVerticalActual);
+
+        clip.textoOverlay = textoOverlay || "";
+        clip.textoFuente = textoFuente || "Arial";
+        clip.textoTamano = textoTamano || 32;
+        clip.textoColor = textoColor || "#ffffff";
+
+        await clip.save();
+
+        res.json(convertirClipAUrlsAbsolutas(clip));
+
+    } catch (error) {
+        console.log("Error quemando texto en el clip:", error.message);
+        res.status(500).json({ error: "Error interno al guardar el texto." });
     }
 
 });

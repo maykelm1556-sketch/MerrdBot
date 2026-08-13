@@ -255,12 +255,10 @@ function renderClips() {
                 <p style="margin:0;">${escaparHtml(clip.titulo)}</p>
                 <small style="color:#888;">${clip.duracionSegundos}s · ${clip.usuarioCreador}</small>
             </div>
-            <div style="display:flex; gap:6px; flex-wrap:wrap;">
-               <button class="editarUsuario renombrarClip" data-id="${clip._id}">✏️ Renombrar</button>
-             <button class="editarUsuario recortarClip" data-id="${clip._id}" data-duracion="${clip.duracionSegundos}">✂️ Recortar más</button>
-                <button class="editarUsuario editarPosicionClip" data-id="${clip._id}" data-zoom="${clip.zoom || 100}" data-offsetx="${clip.offsetX || 0}" data-offsety="${clip.offsetY || 0}">🖼️ Editar posición</button>
-                <button class="editarUsuario abrirFormatoClip" data-id="${clip._id}">🎨 Formato</button>
-                <button class="editarUsuario editarSubtitulosClip" data-id="${clip._id}">📝 Subtítulos</button>
+           <div style="display:flex; gap:6px; flex-wrap:wrap;">
+
+                <button class="editarUsuario renombrarClip" data-id="${clip._id}">✏️ Renombrar</button>
+                <button class="editarUsuario abrirEditorClip" data-id="${clip._id}">🎬 Editar</button>
               <a href="${clip.rutaVideoVertical}" download class="editarUsuario" style="text-decoration:none; display:inline-block;">⬇️ Descargar</a>
                 <button class="eliminarUsuario eliminarClip" data-id="${clip._id}">🗑️ Eliminar</button>
             </div>
@@ -338,32 +336,7 @@ document.addEventListener("click", (e) => {
 
     }
 
-if (e.target.classList.contains("editarPosicionClip")) {
-
-        idClipEditandoPosicion = e.target.dataset.id;
-
-        const clip = misClips.find(c => c._id === idClipEditandoPosicion);
-        if (!clip) return;
-
-       sliderZoom.value = clip.zoom || 100;
-        sliderOffsetX.value = clip.offsetX || 0;
-        sliderOffsetY.value = clip.offsetY || 0;
-        sliderSubtitulo.value = clip.subtituloMarginV !== undefined ? clip.subtituloMarginV : 40;
-
-      previaEdicionVideo.src = clip.rutaVideo;
-        previaEdicionVideo.load();
-        previaEdicionVideo.play().catch(() => {});
-
-        actualizarPreviaEdicion();
-
-        const rutaSrtClip = clip.rutaVideoVertical.replace(".mp4", ".srt");
-        cargarSubtitulosPreview(rutaSrtClip);
-
-        modalEditarPosicion.style.display = "flex";
-
-    }
-
-    if (e.target.classList.contains("eliminarClip")) {
+if (e.target.classList.contains("eliminarClip")) {
 
         const id = e.target.dataset.id;
 
@@ -400,8 +373,13 @@ socket.on("clip-nuevo", (clip) => {
     renderClips();
 });
 
-const modalEditarPosicion = document.getElementById("modalEditarPosicion");
-const previaEdicionVideo = document.getElementById("previaEdicionVideo");
+const editorClipPanel = document.getElementById("editorClipPanel");
+const editorClipTitulo = document.getElementById("editorClipTitulo");
+const editorClipVideo = document.getElementById("editorClipVideo");
+const cerrarEditorClip = document.getElementById("cerrarEditorClip");
+
+let idClipEditor = null;
+
 const sliderZoom = document.getElementById("sliderZoom");
 const sliderOffsetX = document.getElementById("sliderOffsetX");
 const sliderOffsetY = document.getElementById("sliderOffsetY");
@@ -410,11 +388,11 @@ const valorZoom = document.getElementById("valorZoom");
 const valorOffsetX = document.getElementById("valorOffsetX");
 const valorOffsetY = document.getElementById("valorOffsetY");
 const valorSubtitulo = document.getElementById("valorSubtitulo");
-const guardarEdicionPosicion = document.getElementById("guardarEdicionPosicion");
-const cancelarEdicionPosicion = document.getElementById("cancelarEdicionPosicion");
+const editorAplicarPosicion = document.getElementById("editorAplicarPosicion");
+const editorClipSubtituloPreview = document.getElementById("editorClipSubtituloPreview");
 
-let idClipEditandoPosicion = null;
 let subtitulosPreviewActuales = [];
+let posicionCargadaParaClip = null;
 
 function tiempoSrtASegundos(texto) {
     const partes = texto.split(",");
@@ -450,7 +428,7 @@ function parsearSrt(contenidoSrt) {
 function cargarSubtitulosPreview(rutaSrt) {
 
     subtitulosPreviewActuales = [];
-    previaEdicionSubtitulo.textContent = "";
+    editorClipSubtituloPreview.textContent = "";
 
     fetch(rutaSrt)
         .then(response => {
@@ -466,40 +444,26 @@ function cargarSubtitulosPreview(rutaSrt) {
 
 }
 
-const previaEdicionSubtitulo = document.getElementById("previaEdicionSubtitulo");
-
-previaEdicionVideo.addEventListener("timeupdate", () => {
-
-    const tiempoActual = previaEdicionVideo.currentTime;
-
-    const subtituloActivo = subtitulosPreviewActuales.find(
-        s => tiempoActual >= s.inicio && tiempoActual <= s.fin
-    );
-
-    previaEdicionSubtitulo.textContent = subtituloActivo ? subtituloActivo.texto : "";
-
-});
-
 function actualizarPreviaEdicion() {
 
     const zoom = parseFloat(sliderZoom.value);
     const offsetX = parseFloat(sliderOffsetX.value);
     const offsetY = parseFloat(sliderOffsetY.value);
-
-   const margenSubtitulo = parseFloat(sliderSubtitulo.value);
+    const margenSubtitulo = parseFloat(sliderSubtitulo.value);
 
     valorZoom.textContent = zoom;
     valorOffsetX.textContent = offsetX;
     valorOffsetY.textContent = offsetY;
     valorSubtitulo.textContent = margenSubtitulo;
 
-    previaEdicionSubtitulo.style.bottom = `${margenSubtitulo / 5}px`;
+    editorClipSubtituloPreview.style.bottom = `${margenSubtitulo / 5}px`;
 
-const escalaPreview = 150 / 1080;
+    const anchoPreview = editorClipVideo.offsetWidth || 150;
+    const escalaPreview = anchoPreview / 1080;
     const desplazX = offsetX * escalaPreview;
     const desplazY = offsetY * escalaPreview;
 
-    previaEdicionVideo.style.transform = `translate(-50%, -50%) translate(${desplazX}px, ${desplazY}px) scale(${zoom / 100})`;
+    editorClipVideo.style.transform = `translate(-50%, -50%) translate(${desplazX}px, ${desplazY}px) scale(${zoom / 100})`;
 
 }
 
@@ -507,84 +471,286 @@ const escalaPreview = 150 / 1080;
     slider.addEventListener("input", actualizarPreviaEdicion);
 });
 
-cancelarEdicionPosicion.addEventListener("click", () => {
-    modalEditarPosicion.style.display = "none";
-    idClipEditandoPosicion = null;
+editorClipVideo.addEventListener("timeupdate", () => {
+
+    const tiempoActual = editorClipVideo.currentTime;
+
+    const subtituloActivo = subtitulosPreviewActuales.find(
+        s => tiempoActual >= s.inicio && tiempoActual <= s.fin
+    );
+
+    editorClipSubtituloPreview.textContent = subtituloActivo ? subtituloActivo.texto : "";
+
 });
 
-const modalFormato = document.getElementById("modalFormato");
-const cancelarFormato = document.getElementById("cancelarFormato");
+document.addEventListener("click", (e) => {
+
+    if (e.target.classList.contains("abrirEditorClip")) {
+
+        idClipEditor = e.target.dataset.id;
+        const clip = misClips.find(c => c._id === idClipEditor);
+        if (!clip) return;
+
+        editorClipTitulo.textContent = clip.titulo;
+        editorClipVideo.src = clip.rutaVideo;
+        editorClipVideo.load();
+        editorClipVideo.play().catch(() => {});
+
+        editorClipPanel.style.display = "flex";
+
+    }
+
+});
+
+cerrarEditorClip.addEventListener("click", () => {
+    editorClipPanel.style.display = "none";
+    idClipEditor = null;
+    posicionCargadaParaClip = null;
+    subtitulosCargadosParaClip = null;
+    textoCargadoParaClip = null;
+    editorClipTextoPreview.textContent = "";
+});
+
+document.querySelectorAll(".editorClipSeccionBtn").forEach((boton) => {
+
+    boton.addEventListener("click", () => {
+
+        document.querySelectorAll(".editorClipSeccionBtn").forEach(b => b.classList.remove("activo"));
+        boton.classList.add("activo");
+
+        document.querySelectorAll(".editorClipSeccion").forEach(s => s.style.display = "none");
+
+        const seccion = boton.dataset.seccion;
+        document.getElementById(`seccion${seccion.charAt(0).toUpperCase() + seccion.slice(1)}`).style.display = "block";
+
+        editorTrimBarContenedor.style.display = seccion === "recortar" ? "block" : "none";
+
+       if (seccion === "posicion" && idClipEditor) {
+
+            const clip = misClips.find(c => c._id === idClipEditor);
+            if (!clip) return;
+
+            sliderZoom.value = clip.zoom || 100;
+            sliderOffsetX.value = clip.offsetX || 0;
+            sliderOffsetY.value = clip.offsetY || 0;
+            sliderSubtitulo.value = clip.subtituloMarginV !== undefined ? clip.subtituloMarginV : 40;
+
+            actualizarPreviaEdicion();
+
+            if (posicionCargadaParaClip !== idClipEditor) {
+                const rutaSrtClip = clip.rutaVideoVertical.replace(".mp4", ".srt");
+                cargarSubtitulosPreview(rutaSrtClip);
+                posicionCargadaParaClip = idClipEditor;
+            }
+
+        }
+
+       if (seccion === "subtitulos" && idClipEditor && subtitulosCargadosParaClip !== idClipEditor) {
+
+            textareaSubtitulos.value = "Cargando...";
+
+            fetch(`/api/clips/${idClipEditor}/subtitulos`)
+                .then(response => response.json().then(data => ({ status: response.status, data })))
+                .then(({ status, data }) => {
+
+                    if (status !== 200) {
+                        textareaSubtitulos.value = "";
+                        alert(data.error || "No se pudieron cargar los subtítulos.");
+                        return;
+                    }
+
+                    textareaSubtitulos.value = data.srt;
+                    subtitulosCargadosParaClip = idClipEditor;
+
+                });
+
+        }
+
+        if (seccion === "texto" && idClipEditor && textoCargadoParaClip !== idClipEditor) {
+
+            const clip = misClips.find(c => c._id === idClipEditor);
+            if (!clip) return;
+
+            textareaTextoOverlay.value = clip.textoOverlay || "";
+            selectFuenteTexto.value = clip.textoFuente || "Arial, sans-serif";
+            sliderTamanoTexto.value = clip.textoTamano || 32;
+            inputColorTexto.value = clip.textoColor || "#ffffff";
+
+            actualizarPreviaTexto();
+            textoCargadoParaClip = idClipEditor;
+
+        }
+
+    });
+
+});
+
+const editorTrimBarContenedor = document.getElementById("editorTrimBarContenedor");
+const editorTrimTrack = document.getElementById("editorTrimTrack");
+const editorTrimSeleccion = document.getElementById("editorTrimSeleccion");
+const editorTrimHandleInicio = document.getElementById("editorTrimHandleInicio");
+const editorTrimHandleFin = document.getElementById("editorTrimHandleFin");
+const editorRecorteLabelInicio = document.getElementById("editorRecorteLabelInicio");
+const editorRecorteLabelFin = document.getElementById("editorRecorteLabelFin");
+const editorRecorteLabelDuracion = document.getElementById("editorRecorteLabelDuracion");
+const editorAplicarRecorte = document.getElementById("editorAplicarRecorte");
+
+let trimInicioSeg = 0;
+let trimFinSeg = 10;
+let trimDuracionTotal = 10;
+
+function formatearTiempoCorto(segundos) {
+    const mins = Math.floor(segundos / 60);
+    const segs = Math.floor(segundos % 60);
+    return `${mins}:${String(segs).padStart(2, "0")}`;
+}
+
+function pintarTrimBar() {
+
+    const pctInicio = (trimInicioSeg / trimDuracionTotal) * 100;
+    const pctFin = (trimFinSeg / trimDuracionTotal) * 100;
+
+    editorTrimHandleInicio.style.left = `calc(${pctInicio}% - 7px)`;
+    editorTrimHandleFin.style.left = `calc(${pctFin}% - 7px)`;
+    editorTrimSeleccion.style.left = `${pctInicio}%`;
+    editorTrimSeleccion.style.width = `${pctFin - pctInicio}%`;
+
+    editorRecorteLabelInicio.textContent = formatearTiempoCorto(trimInicioSeg);
+    editorRecorteLabelFin.textContent = formatearTiempoCorto(trimFinSeg);
+    editorRecorteLabelDuracion.textContent = `${(trimFinSeg - trimInicioSeg).toFixed(1)}s`;
+
+}
+
+function iniciarArrastre(handle, esInicio) {
+
+    handle.addEventListener("mousedown", (e) => {
+
+        e.preventDefault();
+
+        function moverHandle(eventoMover) {
+
+            const rect = editorTrimTrack.getBoundingClientRect();
+            let pct = (eventoMover.clientX - rect.left) / rect.width;
+            pct = Math.max(0, Math.min(1, pct));
+            const segundos = pct * trimDuracionTotal;
+
+            if (esInicio) {
+                trimInicioSeg = Math.min(segundos, trimFinSeg - 0.5);
+                trimInicioSeg = Math.max(0, trimInicioSeg);
+            } else {
+                trimFinSeg = Math.max(segundos, trimInicioSeg + 0.5);
+                trimFinSeg = Math.min(trimDuracionTotal, trimFinSeg);
+            }
+
+            pintarTrimBar();
+
+        }
+
+        function soltar() {
+            document.removeEventListener("mousemove", moverHandle);
+            document.removeEventListener("mouseup", soltar);
+        }
+
+        document.addEventListener("mousemove", moverHandle);
+        document.addEventListener("mouseup", soltar);
+
+    });
+
+}
+
+iniciarArrastre(editorTrimHandleInicio, true);
+iniciarArrastre(editorTrimHandleFin, false);
+
+editorClipVideo.addEventListener("loadedmetadata", () => {
+
+    if (idClipEditor) {
+        trimDuracionTotal = editorClipVideo.duration || 10;
+        trimInicioSeg = 0;
+        trimFinSeg = Math.min(trimDuracionTotal, 10);
+        pintarTrimBar();
+    }
+
+});
+
+editorAplicarRecorte.addEventListener("click", () => {
+
+    if (!idClipEditor) return;
+
+    const inicioSegundos = trimInicioSeg;
+    const duracionSegundos = trimFinSeg - trimInicioSeg;
+
+    editorAplicarRecorte.disabled = true;
+    editorAplicarRecorte.textContent = "Aplicando (puede tardar)...";
+
+    fetch(`/api/clips/${idClipEditor}/recortar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inicioSegundos, duracionSegundos })
+    })
+        .then(response => response.json().then(data => ({ status: response.status, data })))
+        .then(({ status, data }) => {
+
+            editorAplicarRecorte.disabled = false;
+            editorAplicarRecorte.textContent = "Aplicar recorte";
+
+            if (status !== 200) {
+                alert(data.error || "No se pudo recortar el clip.");
+                return;
+            }
+
+            const index = misClips.findIndex(c => c._id === idClipEditor);
+            if (index !== -1) misClips[index] = data;
+            renderClips();
+
+            alert("Clip recortado correctamente.");
+
+        });
+
+});
+
 const formatoNormalBtn = document.getElementById("formatoNormalBtn");
 const formatoDifuminadoBtn = document.getElementById("formatoDifuminadoBtn");
 const formatoCamaraJuegoBtn = document.getElementById("formatoCamaraJuegoBtn");
 
-let idClipEligiendoFormato = null;
-
-document.addEventListener("click", (e) => {
-
-    if (e.target.classList.contains("abrirFormatoClip")) {
-        idClipEligiendoFormato = e.target.dataset.id;
-        modalFormato.style.display = "flex";
-    }
-
-});
-
-cancelarFormato.addEventListener("click", () => {
-    modalFormato.style.display = "none";
-    idClipEligiendoFormato = null;
-});
-
-const modalSubtitulos = document.getElementById("modalSubtitulos");
 const textareaSubtitulos = document.getElementById("textareaSubtitulos");
 const guardarSubtitulos = document.getElementById("guardarSubtitulos");
-const cancelarSubtitulos = document.getElementById("cancelarSubtitulos");
 
-let idClipEditandoSubtitulos = null;
+let subtitulosCargadosParaClip = null;
 
-document.addEventListener("click", (e) => {
+const editorClipTextoPreview = document.getElementById("editorClipTextoPreview");
+const textareaTextoOverlay = document.getElementById("textareaTextoOverlay");
+const selectFuenteTexto = document.getElementById("selectFuenteTexto");
+const sliderTamanoTexto = document.getElementById("sliderTamanoTexto");
+const valorTamanoTexto = document.getElementById("valorTamanoTexto");
+const inputColorTexto = document.getElementById("inputColorTexto");
+const guardarTextoOverlay = document.getElementById("guardarTextoOverlay");
 
-    if (e.target.classList.contains("editarSubtitulosClip")) {
+let textoCargadoParaClip = null;
 
-        const id = e.target.dataset.id;
-        idClipEditandoSubtitulos = id;
+function actualizarPreviaTexto() {
 
-        textareaSubtitulos.value = "Cargando...";
-        modalSubtitulos.style.display = "flex";
+    editorClipTextoPreview.textContent = textareaTextoOverlay.value;
+    editorClipTextoPreview.style.fontFamily = selectFuenteTexto.value;
+    editorClipTextoPreview.style.fontSize = `${sliderTamanoTexto.value}px`;
+    editorClipTextoPreview.style.color = inputColorTexto.value;
+    valorTamanoTexto.textContent = sliderTamanoTexto.value;
 
-        fetch(`/api/clips/${id}/subtitulos`)
-            .then(response => response.json().then(data => ({ status: response.status, data })))
-            .then(({ status, data }) => {
+}
 
-                if (status !== 200) {
-                    textareaSubtitulos.value = "";
-                    alert(data.error || "No se pudieron cargar los subtítulos.");
-                    modalSubtitulos.style.display = "none";
-                    return;
-                }
-
-                textareaSubtitulos.value = data.srt;
-
-            });
-
-    }
-
-});
-
-cancelarSubtitulos.addEventListener("click", () => {
-    modalSubtitulos.style.display = "none";
-    idClipEditandoSubtitulos = null;
+[textareaTextoOverlay, selectFuenteTexto, sliderTamanoTexto, inputColorTexto].forEach((campo) => {
+    campo.addEventListener("input", actualizarPreviaTexto);
 });
 
 guardarSubtitulos.addEventListener("click", () => {
 
-    if (!idClipEditandoSubtitulos) return;
+    if (!idClipEditor) return;
 
     const srtEditado = textareaSubtitulos.value;
 
     guardarSubtitulos.disabled = true;
     guardarSubtitulos.textContent = "Guardando (puede tardar)...";
 
-    fetch(`/api/clips/${idClipEditandoSubtitulos}/subtitulos`, {
+    fetch(`/api/clips/${idClipEditor}/subtitulos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ srt: srtEditado })
@@ -601,8 +767,6 @@ guardarSubtitulos.addEventListener("click", () => {
             }
 
             alert("Subtítulos actualizados correctamente.");
-            modalSubtitulos.style.display = "none";
-            idClipEditandoSubtitulos = null;
 
         })
         .catch(() => {
@@ -615,12 +779,12 @@ guardarSubtitulos.addEventListener("click", () => {
 
 function aplicarFormato(formato) {
 
-    if (!idClipEligiendoFormato) return;
+    if (!idClipEditor) return;
 
-    modalFormato.style.display = "none";
+    [formatoNormalBtn, formatoDifuminadoBtn, formatoCamaraJuegoBtn].forEach(b => b.disabled = true);
     alert("Aplicando formato, esto puede tardar un momento...");
 
-    fetch(`/api/clips/${idClipEligiendoFormato}/formato`, {
+    fetch(`/api/clips/${idClipEditor}/formato`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ formato })
@@ -628,17 +792,18 @@ function aplicarFormato(formato) {
         .then(response => response.json().then(data => ({ status: response.status, data })))
         .then(({ status, data }) => {
 
+            [formatoNormalBtn, formatoDifuminadoBtn, formatoCamaraJuegoBtn].forEach(b => b.disabled = false);
+
             if (status !== 200) {
                 alert(data.error || "No se pudo cambiar el formato.");
                 return;
             }
 
-            const index = misClips.findIndex(c => c._id === idClipEligiendoFormato);
+            const index = misClips.findIndex(c => c._id === idClipEditor);
             if (index !== -1) misClips[index] = data;
             renderClips();
 
             alert("Formato aplicado.");
-            idClipEligiendoFormato = null;
 
         });
 
@@ -648,19 +813,19 @@ formatoNormalBtn.addEventListener("click", () => aplicarFormato("normal"));
 formatoDifuminadoBtn.addEventListener("click", () => aplicarFormato("difuminado"));
 formatoCamaraJuegoBtn.addEventListener("click", () => aplicarFormato("camarajuego"));
 
-guardarEdicionPosicion.addEventListener("click", () => {
+editorAplicarPosicion.addEventListener("click", () => {
 
-    if (!idClipEditandoPosicion) return;
+    if (!idClipEditor) return;
 
-const zoom = parseFloat(sliderZoom.value);
+    const zoom = parseFloat(sliderZoom.value);
     const offsetX = parseFloat(sliderOffsetX.value);
     const offsetY = parseFloat(sliderOffsetY.value);
     const subtituloMarginV = parseFloat(sliderSubtitulo.value);
 
-    guardarEdicionPosicion.disabled = true;
-    guardarEdicionPosicion.textContent = "Guardando (puede tardar)...";
+    editorAplicarPosicion.disabled = true;
+    editorAplicarPosicion.textContent = "Guardando (puede tardar)...";
 
-    fetch(`/api/clips/${idClipEditandoPosicion}/reposicionar`, {
+    fetch(`/api/clips/${idClipEditor}/reposicionar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ zoom, offsetX, offsetY, subtituloMarginV })
@@ -668,25 +833,61 @@ const zoom = parseFloat(sliderZoom.value);
         .then(response => response.json().then(data => ({ status: response.status, data })))
         .then(({ status, data }) => {
 
-            guardarEdicionPosicion.disabled = false;
-            guardarEdicionPosicion.textContent = "Guardar cambios";
+            editorAplicarPosicion.disabled = false;
+            editorAplicarPosicion.textContent = "Guardar posición";
 
             if (status !== 200) {
                 alert(data.error || "No se pudo reposicionar el clip.");
                 return;
             }
 
-            const index = misClips.findIndex(c => c._id === idClipEditandoPosicion);
+            const index = misClips.findIndex(c => c._id === idClipEditor);
             if (index !== -1) misClips[index] = data;
             renderClips();
 
-            modalEditarPosicion.style.display = "none";
-            idClipEditandoPosicion = null;
+            alert("Posición guardada correctamente.");
 
         });
 
 });
 
+guardarTextoOverlay.addEventListener("click", () => {
+
+    if (!idClipEditor) return;
+
+    const textoOverlay = textareaTextoOverlay.value;
+    const textoFuente = selectFuenteTexto.value;
+    const textoTamano = parseInt(sliderTamanoTexto.value);
+    const textoColor = inputColorTexto.value;
+
+    guardarTextoOverlay.disabled = true;
+    guardarTextoOverlay.textContent = "Guardando (puede tardar)...";
+
+    fetch(`/api/clips/${idClipEditor}/texto`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ textoOverlay, textoFuente, textoTamano, textoColor })
+    })
+        .then(response => response.json().then(data => ({ status: response.status, data })))
+        .then(({ status, data }) => {
+
+            guardarTextoOverlay.disabled = false;
+            guardarTextoOverlay.textContent = "Guardar texto";
+
+            if (status !== 200) {
+                alert(data.error || "No se pudo guardar el texto.");
+                return;
+            }
+
+            const index = misClips.findIndex(c => c._id === idClipEditor);
+            if (index !== -1) misClips[index] = data;
+            renderClips();
+
+            alert("Texto guardado correctamente.");
+
+        });
+
+});
 guardarUsuario.addEventListener("click", () => {
 
     if (!adminAutenticado) {

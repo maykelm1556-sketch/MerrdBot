@@ -286,6 +286,80 @@ function generarVersionCamaraJuego(rutaVideo, rutaSalida) {
 
 }
 
+function escaparTextoParaDrawtext(texto) {
+
+    return texto
+        .replace(/\\/g, "\\\\\\\\")
+        .replace(/:/g, "\\:")
+        .replace(/'/g, "\u2019")
+        .replace(/%/g, "\\%");
+
+}
+
+function obtenerRutaFuente(textoFuente) {
+
+    const valor = (textoFuente || "").toLowerCase();
+
+    if (valor.includes("trebuchet")) return "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf";
+    if (valor.includes("georgia")) return "/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf";
+    if (valor.includes("courier")) return "/usr/share/fonts/truetype/liberation/LiberationMono-Bold.ttf";
+    if (valor.includes("impact")) return "/usr/share/fonts/truetype/custom/Anton-Regular.ttf";
+    if (valor.includes("verdana")) return "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf";
+    if (valor.includes("comic")) return "/usr/share/fonts/truetype/custom/ComicNeue-Bold.ttf";
+
+    return "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf";
+
+}
+
+function quemarTextoOverlay(rutaVideoEntrada, rutaVideoSalida, { texto, fuente, tamano, color }) {
+
+    return new Promise((resolve, reject) => {
+
+        if (!texto || texto.trim() === "") {
+            fs.copyFileSync(rutaVideoEntrada, rutaVideoSalida);
+            resolve({ ok: true, rutaSalida: rutaVideoSalida });
+            return;
+        }
+
+        const rutaFuente = obtenerRutaFuente(fuente);
+        const textoEscapado = escaparTextoParaDrawtext(texto);
+        const tamanoFinal = tamano || 32;
+        const colorFinal = color || "#ffffff";
+
+        const filtro = `drawtext=text='${textoEscapado}':fontfile=${rutaFuente}:fontsize=${tamanoFinal}:fontcolor=${colorFinal}:x=(w-text_w)/2:y=60:box=1:boxcolor=black@0.4:boxborderw=10`;
+
+        const args = [
+            "-i", rutaVideoEntrada,
+            "-vf", filtro,
+            "-c:a", "copy",
+            "-preset", "veryfast",
+            "-y", rutaVideoSalida
+        ];
+
+        const proceso = spawn("ffmpeg", args);
+
+        let errorSalida = "";
+
+        proceso.stderr.on("data", (dato) => {
+            errorSalida += dato.toString();
+        });
+
+        proceso.on("close", (codigo) => {
+            if (codigo === 0) {
+                resolve({ ok: true, rutaSalida: rutaVideoSalida });
+            } else {
+                reject(new Error(`FFmpeg (texto overlay) terminó con código ${codigo}: ${errorSalida.slice(-500)}`));
+            }
+        });
+
+        proceso.on("error", (error) => {
+            reject(new Error(`No se pudo ejecutar FFmpeg (texto overlay): ${error.message}`));
+        });
+
+    });
+
+}
+
 function convertirClipAUrlsAbsolutas(clipDoc) {
 
     const clip = clipDoc.toObject ? clipDoc.toObject() : clipDoc;
@@ -504,4 +578,4 @@ fs.unlinkSync(rutaMp4Actual);
     return { valido: true, clip: clip };
 
 }
-module.exports = { cortarClip, generarMiniatura, generarVersionVertical, generarVersionVerticalPersonalizada, generarVersionVerticalFondoDifuminado, generarVersionCamaraJuego, procesarComandoClip, recortarClipExistente, generarSubtitulos, quemarSubtitulos, convertirClipAUrlsAbsolutas };
+module.exports = { cortarClip, generarMiniatura, generarVersionVertical, generarVersionVerticalPersonalizada, generarVersionVerticalFondoDifuminado, generarVersionCamaraJuego, procesarComandoClip, recortarClipExistente, generarSubtitulos, quemarSubtitulos, quemarTextoOverlay, convertirClipAUrlsAbsolutas };

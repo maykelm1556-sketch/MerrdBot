@@ -16,7 +16,11 @@ formato: { type: String, enum: ["normal", "difuminado", "camarajuego"], default:
     camX: { type: Number, default: 0 },
     camY: { type: Number, default: 580 },
     camAncho: { type: Number, default: 845 },
-    camAlto: { type: Number, default: 500 },
+   camAlto: { type: Number, default: 500 },
+    textoOverlay: { type: String, default: "" },
+    textoFuente: { type: String, default: "Arial" },
+    textoTamano: { type: Number, default: 32 },
+    textoColor: { type: String, default: "#ffffff" },
     vistas: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
     estado: {
