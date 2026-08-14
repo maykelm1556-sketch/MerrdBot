@@ -692,7 +692,7 @@ editorAplicarRecorte.addEventListener("click", () => {
         .then(response => response.json().then(data => ({ status: response.status, data })))
         .then(({ status, data }) => {
 
-            editorAplicarRecorte.disabled = false;
+           editorAplicarRecorte.disabled = false;
             editorAplicarRecorte.textContent = "Aplicar recorte";
 
             if (status !== 200) {
@@ -703,6 +703,10 @@ editorAplicarRecorte.addEventListener("click", () => {
             const index = misClips.findIndex(c => c._id === idClipEditor);
             if (index !== -1) misClips[index] = data;
             renderClips();
+
+            editorClipVideo.src = data.rutaVideo + "?t=" + Date.now();
+            editorClipVideo.load();
+            editorClipVideo.play().catch(() => {});
 
             alert("Clip recortado correctamente.");
 
@@ -804,6 +808,10 @@ function aplicarFormato(formato) {
             const index = misClips.findIndex(c => c._id === idClipEditor);
             if (index !== -1) misClips[index] = data;
             renderClips();
+
+            editorClipVideo.src = data.rutaVideo + "?t=" + Date.now();
+            editorClipVideo.load();
+            editorClipVideo.play().catch(() => {});
 
             alert("Formato aplicado.");
 
