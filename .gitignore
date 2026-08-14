@@ -5,4 +5,10 @@ recordings/
 public/clips/
 *.mp4
 *.ts
-*.srt.env
+*.srt
+
+public/avatares/
+*.backup
+*.antes-fix
+*.antes-fix2
+*.antes-fix3

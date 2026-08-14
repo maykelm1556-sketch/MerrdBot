@@ -264,6 +264,11 @@ function renderClips() {
               <a href="${clip.rutaVideoVertical}" download class="editarUsuario" style="text-decoration:none; display:inline-block;">⬇️ Descargar</a>
                 <button class="eliminarUsuario eliminarClip" data-id="${clip._id}">🗑️ Eliminar</button>
             </div>
+            <div style="display:flex; flex-direction:column; gap:6px; min-width:180px;">
+                <button class="editarUsuario publicarYoutube" data-id="${clip._id}" style="width:100%;">📤 Publicar en YouTube</button>
+                <button class="editarUsuario publicarTiktok" data-id="${clip._id}" style="width:100%;">📤 Publicar en TikTok</button>
+                <button class="editarUsuario publicarInstagram" data-id="${clip._id}" style="width:100%;">📤 Publicar en Instagram</button>
+            </div>
         </div>
     `;
     });
@@ -526,6 +531,7 @@ document.querySelectorAll(".editorClipSeccionBtn").forEach((boton) => {
         document.getElementById(`seccion${seccion.charAt(0).toUpperCase() + seccion.slice(1)}`).style.display = "block";
 
         editorTrimBarContenedor.style.display = seccion === "recortar" ? "block" : "none";
+ editorClipSubtituloPreview.style.display = seccion === "posicion" ? "block" : "none";
 
        if (seccion === "posicion" && idClipEditor) {
 
@@ -809,7 +815,7 @@ function aplicarFormato(formato) {
             if (index !== -1) misClips[index] = data;
             renderClips();
 
-            editorClipVideo.src = data.rutaVideo + "?t=" + Date.now();
+            editorClipVideo.src = data.rutaVideoVertical + "?t=" + Date.now();
             editorClipVideo.load();
             editorClipVideo.play().catch(() => {});
 
@@ -2406,4 +2412,123 @@ btnIntroAdminLogin.addEventListener("click", () => {
             introAdminError.style.display = "block";
         });
 
+});
+document.getElementById("editorClipGuardar").addEventListener("click", async () => {
+    if (!idClipEditor) return;
+
+    const botonSeccionActivo = document.querySelector(".editorClipSeccionBtn.activo");
+    const seccion = botonSeccionActivo ? botonSeccionActivo.dataset.seccion : null;
+    const editorClipGuardarBtn = document.getElementById("editorClipGuardar");
+
+    function cerrarEditorTrasGuardar() {
+        editorClipPanel.style.display = "none";
+        idClipEditor = null;
+        posicionCargadaParaClip = null;
+        subtitulosCargadosParaClip = null;
+        textoCargadoParaClip = null;
+        editorClipTextoPreview.textContent = "";
+    }
+
+    let url = null;
+    let body = null;
+
+    switch (seccion) {
+        case "recortar":
+            url = `/api/clips/${idClipEditor}/recortar`;
+            body = { inicioSegundos: trimInicioSeg, duracionSegundos: trimFinSeg - trimInicioSeg };
+            break;
+        case "posicion":
+            url = `/api/clips/${idClipEditor}/reposicionar`;
+            body = {
+                zoom: parseFloat(sliderZoom.value),
+                offsetX: parseFloat(sliderOffsetX.value),
+                offsetY: parseFloat(sliderOffsetY.value),
+                subtituloMarginV: parseFloat(sliderSubtitulo.value)
+            };
+            break;
+        case "subtitulos":
+            url = `/api/clips/${idClipEditor}/subtitulos`;
+            body = { srt: textareaSubtitulos.value };
+            break;
+        case "texto":
+            url = `/api/clips/${idClipEditor}/texto`;
+            body = {
+                textoOverlay: textareaTextoOverlay.value,
+                textoFuente: selectFuenteTexto.value,
+                textoTamano: parseInt(sliderTamanoTexto.value),
+                textoColor: inputColorTexto.value
+            };
+            break;
+        case "formato":
+            alert("En Formato, elegí una opción (Normal, Difuminado o Cámara-juego) arriba: se aplica y guarda al instante.");
+            return;
+        default:
+            alert("Elegí una sección del editor primero.");
+            return;
+    }
+
+    editorClipGuardarBtn.disabled = true;
+    editorClipGuardarBtn.textContent = "Guardando (puede tardar)...";
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+        const data = await response.json();
+
+        editorClipGuardarBtn.disabled = false;
+        editorClipGuardarBtn.textContent = "Guardar cambios";
+
+        if (response.status !== 200) {
+            alert(data.error || "No se pudo guardar el cambio.");
+            return;
+        }
+
+        const index = misClips.findIndex(c => c._id === idClipEditor);
+        if (index !== -1) misClips[index] = data;
+        renderClips();
+
+        cerrarEditorTrasGuardar();
+
+    } catch (err) {
+        editorClipGuardarBtn.disabled = false;
+        editorClipGuardarBtn.textContent = "Guardar cambios";
+        alert("Error al guardar el cambio.");
+    }
+});
+
+document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("publicarYoutube")) {
+        const boton = e.target;
+        const id = boton.dataset.id;
+        const textoOriginal = boton.textContent;
+        boton.disabled = true;
+        boton.textContent = "Subiendo a YouTube...";
+        fetch(`/api/clips/${id}/publicar/youtube`, { method: "POST", headers: { "Content-Type": "application/json" } })
+            .then(response => response.json().then(data => ({ status: response.status, data })))
+            .then(({ status, data }) => {
+                boton.disabled = false;
+                boton.textContent = textoOriginal;
+                if (status !== 200) {
+                    alert(data.error || "No se pudo publicar en YouTube.");
+                    return;
+                }
+                alert("¡Publicado en YouTube! " + data.url);
+            })
+            .catch(() => {
+                boton.disabled = false;
+                boton.textContent = textoOriginal;
+                alert("Error al publicar en YouTube.");
+            });
+    }
+
+    if (e.target.classList.contains("publicarTiktok")) {
+        alert("Publicar en TikTok todavía no está disponible. Muy pronto vamos a habilitarlo.");
+    }
+
+    if (e.target.classList.contains("publicarInstagram")) {
+        alert("Publicar en Instagram todavía no está disponible. Muy pronto vamos a habilitarlo.");
+    }
 });

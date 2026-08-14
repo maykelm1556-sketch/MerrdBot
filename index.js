@@ -1,4 +1,5 @@
 const express = require("express");
+const { google } = require("googleapis");
 const WebSocket = require("ws");
 const crypto = require("crypto");
 require("dotenv").config();
@@ -13,6 +14,7 @@ const cookieParser = require("cookie-parser");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const Clip = require("./models/Clip");
 
 const carpetaAvatares = path.join(__dirname, "public", "avatares");
 if (!fs.existsSync(carpetaAvatares)) {
@@ -278,7 +280,11 @@ const adminSchema = new mongoose.Schema({
     usuarioKick: String,
     creado_en: Date,
     esDefault: { type: Boolean, default: false },
-    activo: { type: Boolean, default: true }
+    activo: { type: Boolean, default: true },
+    youtubeAccessToken: String,
+    youtubeRefreshToken: String,
+    youtubeCanalNombre: String,
+    youtubeCanalId: String
 });
 
 const Admin = mongoose.model("Admin", adminSchema);
@@ -1531,6 +1537,104 @@ app.delete("/api/admins/:id", async (req, res) => {
     const admins = await Admin.find({}, { password: 0 });
     res.json(admins);
 
+});
+
+
+function crearClienteYoutube() {
+    return new google.auth.OAuth2(
+        process.env.YOUTUBE_CLIENT_ID,
+        process.env.YOUTUBE_CLIENT_SECRET,
+        process.env.YOUTUBE_REDIRECT_URI
+    );
+}
+
+app.get("/api/social/youtube/connect", async (req, res) => {
+    const usuarioAdmin = req.query.usuario;
+    const admin = await Admin.findOne({ usuario: usuarioAdmin, activo: true });
+    if (!admin) {
+        res.status(403).send("Admin no válido.");
+        return;
+    }
+    res.cookie("youtube_connect_admin", usuarioAdmin, {
+        httpOnly: true,
+        signed: true,
+        maxAge: 10 * 60 * 1000,
+        sameSite: "lax"
+    });
+    const oauth2Client = crearClienteYoutube();
+    const url = oauth2Client.generateAuthUrl({
+        access_type: "offline",
+        prompt: "consent",
+        scope: ["https://www.googleapis.com/auth/youtube.upload", "https://www.googleapis.com/auth/youtube.readonly"]
+    });
+    res.redirect(url);
+});
+
+app.get("/api/social/youtube/callback", async (req, res) => {
+    const code = req.query.code;
+    const usuarioAdmin = req.signedCookies.youtube_connect_admin;
+    res.clearCookie("youtube_connect_admin");
+    if (!code || !usuarioAdmin) {
+        res.redirect("/?youtube_error=1");
+        return;
+    }
+    try {
+        const oauth2Client = crearClienteYoutube();
+        const { tokens } = await oauth2Client.getToken(code);
+        oauth2Client.setCredentials(tokens);
+        const youtube = google.youtube({ version: "v3", auth: oauth2Client });
+        const canalInfo = await youtube.channels.list({ part: "snippet", mine: true });
+        const canal = canalInfo.data.items && canalInfo.data.items[0];
+        await Admin.findOneAndUpdate(
+            { usuario: usuarioAdmin },
+            {
+                youtubeAccessToken: tokens.access_token,
+                youtubeRefreshToken: tokens.refresh_token,
+                youtubeCanalNombre: canal ? canal.snippet.title : "Canal conectado",
+                youtubeCanalId: canal ? canal.id : ""
+            }
+        );
+        res.redirect("/?youtube_conectado=1");
+    } catch (error) {
+        console.log("Error conectando YouTube:", error.message);
+        res.redirect("/?youtube_error=1");
+    }
+});
+
+app.post("/api/clips/:id/publicar/youtube", async (req, res) => {
+    const id = req.params.id;
+    try {
+        const admin = await Admin.findOne({ youtubeRefreshToken: { $exists: true, $ne: null }, activo: true });
+        if (!admin || !admin.youtubeRefreshToken) {
+            res.status(400).json({ error: "No hay ninguna cuenta de YouTube conectada todavía." });
+            return;
+        }
+        const clip = await Clip.findById(id);
+        if (!clip) {
+            res.status(404).json({ error: "Clip no encontrado." });
+            return;
+        }
+        const oauth2Client = crearClienteYoutube();
+        oauth2Client.setCredentials({ refresh_token: admin.youtubeRefreshToken });
+        const youtube = google.youtube({ version: "v3", auth: oauth2Client });
+        const rutaArchivo = path.join(__dirname, "public", clip.rutaVideoVertical || clip.rutaVideo);
+        const respuestaSubida = await youtube.videos.insert({
+            part: "snippet,status",
+            requestBody: {
+                snippet: {
+                    title: `Clip de ${clip.streamer || "stream"}`.slice(0, 100),
+                    description: "Subido automáticamente desde MerrdBot",
+                    categoryId: "20"
+                },
+                status: { privacyStatus: "public" }
+            },
+            media: { body: fs.createReadStream(rutaArchivo) }
+        });
+        res.json({ ok: true, videoId: respuestaSubida.data.id, url: `https://youtube.com/watch?v=${respuestaSubida.data.id}` });
+    } catch (error) {
+        console.log("Error publicando en YouTube:", error.message);
+        res.status(500).json({ error: "No se pudo publicar en YouTube." });
+    }
 });
 
 const PORT = process.env.PORT || 3000;

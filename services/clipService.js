@@ -398,7 +398,7 @@ function generarSubtitulos(rutaVideo, rutaSrtSalida) {
 
         proceso.on("close", (codigo) => {
             if (codigo === 0) {
-                resolve({ ok: true, rutaSrt: rutaSrtSalida });
+                try { acortarLineasSrt(rutaSrtSalida, 4); } catch (errorAcortar) { console.log("No se pudo acortar lineas del SRT:", errorAcortar.message); } resolve({ ok: true, rutaSrt: rutaSrtSalida });
             } else {
                 reject(new Error(`FFmpeg (whisper) terminó con código ${codigo}: ${errorSalida.slice(-500)}`));
             }
@@ -579,3 +579,72 @@ fs.unlinkSync(rutaMp4Actual);
 
 }
 module.exports = { cortarClip, generarMiniatura, generarVersionVertical, generarVersionVerticalPersonalizada, generarVersionVerticalFondoDifuminado, generarVersionCamaraJuego, procesarComandoClip, recortarClipExistente, generarSubtitulos, quemarSubtitulos, quemarTextoOverlay, convertirClipAUrlsAbsolutas };
+function tiempoSrtAMs(tiempo) {
+    const [horas, minutos, resto] = tiempo.split(":");
+    const [segundos, ms] = resto.split(",");
+    return (parseInt(horas) * 3600 + parseInt(minutos) * 60 + parseInt(segundos)) * 1000 + parseInt(ms);
+}
+
+function msATiempoSrt(ms) {
+    const horas = Math.floor(ms / 3600000);
+    const minutos = Math.floor((ms % 3600000) / 60000);
+    const segundos = Math.floor((ms % 60000) / 1000);
+    const milisegundos = Math.round(ms % 1000);
+    const pad2 = (n) => String(n).padStart(2, "0");
+    const pad3 = (n) => String(n).padStart(3, "0");
+    return `${pad2(horas)}:${pad2(minutos)}:${pad2(segundos)},${pad3(milisegundos)}`;
+}
+
+function acortarLineasSrt(rutaSrt, palabrasPorLinea) {
+    const contenido = fs.readFileSync(rutaSrt, "utf8");
+    const bloques = contenido.split(/\r?\n\r?\n/).filter(b => b.trim() !== "");
+    const bloquesNuevos = [];
+
+    bloques.forEach((bloque) => {
+        const lineas = bloque.split(/\r?\n/).filter(l => l.trim() !== "");
+        if (lineas.length < 2) return;
+
+        const lineaTiempo = lineas.find(l => l.includes("-->"));
+        if (!lineaTiempo) return;
+
+        const [inicioStr, finStr] = lineaTiempo.split("-->").map(s => s.trim());
+        const inicioMs = tiempoSrtAMs(inicioStr);
+        const finMs = tiempoSrtAMs(finStr);
+        const duracionTotal = finMs - inicioMs;
+
+        const indiceLineaTiempo = lineas.indexOf(lineaTiempo);
+        const texto = lineas.slice(indiceLineaTiempo + 1).join(" ").trim();
+        const palabras = texto.split(/\s+/).filter(p => p !== "");
+
+        if (palabras.length === 0) return;
+
+        const grupos = [];
+        for (let i = 0; i < palabras.length; i += palabrasPorLinea) {
+            grupos.push(palabras.slice(i, i + palabrasPorLinea));
+        }
+
+        const totalPalabras = palabras.length;
+        let acumuladoMs = 0;
+
+        grupos.forEach((grupo, indiceGrupo) => {
+            const proporcion = grupo.length / totalPalabras;
+            const duracionGrupo = Math.round(duracionTotal * proporcion);
+            const inicioGrupoMs = inicioMs + acumuladoMs;
+            const esUltimo = indiceGrupo === grupos.length - 1;
+            const finGrupoMs = esUltimo ? finMs : inicioGrupoMs + duracionGrupo;
+            acumuladoMs += duracionGrupo;
+
+            bloquesNuevos.push({
+                inicio: inicioGrupoMs,
+                fin: finGrupoMs,
+                texto: grupo.join(" ")
+            });
+        });
+    });
+
+    const srtFinal = bloquesNuevos.map((b, index) => {
+        return `${index + 1}\n${msATiempoSrt(b.inicio)} --> ${msATiempoSrt(b.fin)}\n${b.texto}\n`;
+    }).join("\n");
+
+    fs.writeFileSync(rutaSrt, srtFinal, "utf8");
+}
