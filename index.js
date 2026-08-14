@@ -1149,16 +1149,16 @@ let usuario = null;
 
             }
 
-           if ((ROL === "panel" || ROL === "todo") && comando.startsWith("!ruleta ")) {
+           if ((ROL === "panel" || ROL === "todo") && comando.startsWith("!mruleta ")) {
 
                 if (usuario.toLowerCase() !== "merrd0_ec") {
                     await enviarMensajeChat(`@${usuario} no tienes permiso para usar este comando.`);
                 } else {
 
-                    const nombreObjetivo = texto.trim().slice(8).trim();
+                    const nombreObjetivo = texto.trim().slice(9).trim();
 
                     if (!nombreObjetivo) {
-                        await enviarMensajeChat(`@${usuario} escribe el nombre después de !ruleta. Ejemplo: !ruleta Jara`);
+                        await enviarMensajeChat(`@${usuario} escribe el nombre después de !mruleta. Ejemplo: !mruleta Jara`);
                     } else {
                         participantesPendientesRuleta.push(nombreObjetivo);
                         await enviarMensajeChat(`${nombreObjetivo} ha ingresado con éxito`);
