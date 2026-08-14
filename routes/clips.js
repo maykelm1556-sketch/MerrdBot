@@ -36,7 +36,7 @@ router.post("/:id/recortar", async (req, res) => {
 
     const id = req.params.id;
 
-    if (ROL === "panel") {
+    if ((ROL === "panel" || ROL === "todo")) {
 
         try {
 
@@ -90,7 +90,7 @@ router.post("/:id/reposicionar", async (req, res) => {
 
     const id = req.params.id;
 
-    if (ROL === "panel") {
+    if ((ROL === "panel" || ROL === "todo")) {
 
         try {
 
@@ -183,7 +183,7 @@ router.post("/:id/formato", async (req, res) => {
 
     const id = req.params.id;
 
-    if (ROL === "panel") {
+    if ((ROL === "panel" || ROL === "todo")) {
 
         try {
 
@@ -270,7 +270,7 @@ router.get("/:id/subtitulos", async (req, res) => {
 
     const id = req.params.id;
 
-    if (ROL === "panel") {
+    if ((ROL === "panel" || ROL === "todo")) {
 
         try {
 
@@ -321,7 +321,7 @@ router.post("/:id/subtitulos", async (req, res) => {
 
     const id = req.params.id;
 
-    if (ROL === "panel") {
+    if ((ROL === "panel" || ROL === "todo")) {
 
         try {
 
@@ -387,7 +387,7 @@ router.post("/:id/texto", async (req, res) => {
 
     const id = req.params.id;
 
-    if (ROL === "panel") {
+    if ((ROL === "panel" || ROL === "todo")) {
 
         try {
 
